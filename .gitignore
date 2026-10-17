@@ -1,0 +1,41 @@
+# Environment files and credentials, at any directory depth.
+# No .env.example exception: keep all environment files local.
+.env
+.env.*
+*.env
+*.env.*
+.envrc
+.envrc.*
+*.pem
+*.key
+
+# Local provisioning state, credentials, caches, and review artifacts.
+/.projects/
+/.amp/in/
+
+# Private preparation and implementation planning, not product source.
+/AGENT.md
+/AGENTS.md
+/HARNESS.md
+/docs/polyhedge-product-spec.md
+/docs/polyhedge-preparation.md
+/docs/implementation/
+/stages/
+/plans/
+/implementation/
+/mockups/
+docs/*
+
+# Dependencies, generated output, and machine-local files.
+node_modules/
+.next/
+dist/
+build/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+
+.amp/*

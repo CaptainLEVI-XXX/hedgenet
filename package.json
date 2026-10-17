@@ -1,0 +1,22 @@
+{
+  "name": "hedgenet",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": "^24.0.0 || >=26.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "demo:foundation": "node examples/financial-foundation.ts"
+  },
+  "dependencies": {
+    "@hedgenet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}
