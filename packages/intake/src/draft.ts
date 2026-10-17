@@ -105,7 +105,20 @@ export async function interpretExposure(input: unknown, client: JevClient, signa
       missingFields: ['templateId', 'lossParameters', 'budgetUsd', 'observable', 'observation', 'resolutionSource'] };
   }
   for (const [field, answer] of Object.entries(draft.provider.answers)) {
-    const selected = suggestedChoice(answer);
+    let selected = suggestedChoice(answer);
+    if (field === 'observable') {
+      // Mutually exclusive span choices can name the same asset. Combine their
+      // mass before applying the policy, but retain an actual source occurrence.
+      const grouped: Record<string, number> = {};
+      for (const [id, probability] of Object.entries(answer.probabilities)) {
+        const key = spans.find(span => span.id === id)?.value ?? id;
+        grouped[key] = (grouped[key] ?? 0) + probability;
+      }
+      const leader = Object.keys(grouped).sort((a, b) => grouped[b]! - grouped[a]!)[0]!;
+      const canonical = suggestedChoice({ ...answer, choice: leader, probabilities: grouped });
+      selected = spans.filter(span => span.kind === 'observable' && span.value === canonical)
+        .sort((a, b) => answer.probabilities[b.id]! - answer.probabilities[a.id]!)[0]?.id ?? null;
+    }
     if (!selected || Object.hasOwn(escapes, selected)) continue;
     const span = spans.find(span => span.id === selected);
     if (span) {

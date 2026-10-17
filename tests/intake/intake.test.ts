@@ -20,6 +20,20 @@ const context = { timezone: 'America/New_York', interpretedAt: '2026-10-17T19:00
 const client = (picks: Record<string, string>, mutate?: (body: any) => void) =>
   createJevClient({ apiKey: 'synthetic-test-key', fetchImpl: provider(picks, mutate) });
 
+it('combines equivalent observable aliases without combining distinct assets or changing source provenance', async () => {
+  for (const alias of ['Bitcoin', 'Ethereum']) {
+    const text = `2 BTC; protect the ${alias} price`;
+    const draft = await interpretExposure({ text, ...context }, client({ templateId: 'terminal_downside', observable: 'span-2' }, body => {
+      body.answers.observable.probabilities = { 'span-1': 0.32, 'span-2': 0.57, missing: 0.02, ambiguous: 0.06, not_applicable: 0.03 };
+      body.answers.observable.confidence = 0.46;
+    }));
+    if (alias === 'Bitcoin') {
+      expect(draft.fields.observable).toMatchObject({ value: 'bitcoin', confirmed: false,
+        provenance: { kind: 'user_span', raw: 'Bitcoin', spanId: 'span-2' } });
+    } else expect(draft.fields.observable).toBeUndefined();
+  }
+});
+
 it('copies asymmetric holdings/reference/budget roles with exact source offsets, never confirming them', async () => {
   const text = 'I hold 2 BTC, reference $70,000.50; budget $1,000 on November 30.';
   const result = await interpretExposure({ text, ...context }, client({ templateId: 'terminal_downside',

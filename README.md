@@ -33,7 +33,7 @@ Public market discovery now has a persisted categorized catalogue and local
 search. Selected CTF order books can also be read and checked for identity,
 precision and freshness, and bound to full rule text, current status and explicit
 supported fees. Jev now has a bounded, validated adapter and provenance-bearing
-exposure drafts, tested with synthetic provider responses. There is **no complete
+exposure drafts, tested with synthetic responses and one live intake trial. There is **no complete
 live hedge flow, trained model, Codex training harness, or production website yet**. The included
 crypto/weather financial demo is synthetic; it makes no execution claim.
 
@@ -177,8 +177,11 @@ explicit English decimal amounts, date phrases and BTC/ETH/weather aliases.
 Abbreviated/exponential amounts, other aliases and complete observation/source/
 station details require manual clarification. Dates retain their wording: no
 missing year or observation time is borrowed from a market's end date. A draft
-is not a confirmed brief or a financial problem. Live API access and language
-accuracy evaluation remain unverified; local checks make no paid calls.
+is not a confirmed brief or a financial problem. One authorized live intake trial
+verified API access and numeric roles; it is not a language accuracy evaluation.
+Equivalent aliases such as BTC/Bitcoin combine their Choice probability mass
+without merging distinct assets or losing source provenance. Local automated
+checks make no paid calls.
 
 `intakeExposure(input, { client, catalogue })` connects that draft to an already
 loaded `createCatalogueIndex` instance. It retrieves up to 20 cached candidates,
