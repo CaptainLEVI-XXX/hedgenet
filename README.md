@@ -180,6 +180,19 @@ missing year or observation time is borrowed from a market's end date. A draft
 is not a confirmed brief or a financial problem. Live API access and language
 accuracy evaluation remain unverified; local checks make no paid calls.
 
+`intakeExposure(input, { client, catalogue })` connects that draft to an already
+loaded `createCatalogueIndex` instance. It retrieves up to 20 cached candidates,
+judges at most five in one additional batch and returns at most three suggestions.
+Amounts and date spans do not become lexical topic terms; unfamiliar category
+tags do not exclude weather. The full workflow has a ten-second shared deadline
+and at most two model calls. Each call also retains its five-second limit.
+
+Suggestions always say `needs_rule_review`. Relevance probabilities are not
+coverage, settlement compatibility or event probabilities. Empty lexical search,
+no semantic suggestion, unsupported event structure, expired catalogue and API
+failure have distinct statuses; none claims an exhaustive absence of compatible
+markets. Failure of the second call preserves the editable exposure draft.
+
 ### Confirmation and financial assembly
 
 `createRuleReview(eventRules, { semantics, settlement, evidence })` records a

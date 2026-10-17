@@ -26,7 +26,7 @@ const tokens = new RegExp([
   `\\b${month}\\s+\\d{1,2}(?:,?\\s+\\d{4})?`,
   '\\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|tomorrow|today)\\b',
   '\\b(?:bitcoin|btc|ethereum|ether|eth|temperature|rainfall|rain|precipitation)\\b',
-  '(?<![\\p{L}\\p{N}_.])[-+−]?[$€£]?\\s*[-+−]?\\d[\\d,]*(?:\\.\\d+)?(?:e[+-]?\\d+|[kmb])?(?:°[CF])?(?![\\p{L}\\p{N}_])',
+  '(?<![\\p{L}\\p{N}_.,])[-+−]?[$€£]?\\s*[-+−]?\\d[\\d,]*(?:\\.\\d+)?(?:e[+-]?\\d+|[kmb])?(?:°[CF])?(?![\\p{L}\\p{N}_]|[.,]\\d)',
 ].join('|'), 'giu');
 
 function collectSpans(text: string): SourceSpan[] {

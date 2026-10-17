@@ -69,7 +69,7 @@ it('rejects negative holdings, unsupported paths and ambiguous roles rather than
 });
 
 it('preserves exact large decimals and does not extract partial exponential or malformed numeric tokens', async () => {
-  const result = await interpretExposure({ text: 'Hold 999999999999.123456789123 BTC. Budget $1e3, not $12,34.', ...context },
+  const result = await interpretExposure({ text: 'Hold 999999999999.123456789123 BTC. Budget $1e3, not $12,34 or 1.2.3.', ...context },
     client({ templateId: 'terminal_downside', units: 'span-0' }));
   expect(result.fields.units?.value).toBe('999999999999.123456789123');
   expect(result.spans.filter(span => span.kind === 'number')).toHaveLength(1);
