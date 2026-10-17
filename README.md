@@ -349,6 +349,28 @@ checking are outside that native limit. Run it offline under an outer process
 deadline, not in a request handler. No neural training or cloud compute is
 performed by this function.
 
+### Neural proposal decoding
+
+`decodeNeuralProposal(problem, expectedModel, response)` accepts only finite
+normalized outputs for the exact ordered real legs. The host supplies the expected
+`modelVersion`, `weightsHash`, `featureVersion: features-v1`, and `contractHash`;
+the response must match those and the valuation hash. Changed budgets, stale
+problem bindings, extra padded outputs and swapped identities reject.
+
+The decoder clamps outputs to [0, 1], multiplies by reserved capacity, floors to
+whole shares and drops subminimum orders. If full size exceeds the exact budget,
+32 bisection steps scale all quantities down together, checking full fees and
+cost each time. It never tops up, swaps instruments or calls the teacher. Repair
+details and original outputs are retained. Harmful or sub-cent-improvement baskets
+return `no_improvement` with their actual financial result, not a substituted
+zero or solver basket. `improvement` means modeled loss falls by at least $0.01,
+not that a live recommendation is authorized.
+
+This boundary does not verify an accepted artifact, feature support, freshness,
+session ownership or request ordering. The future host must supply those gates
+and reject late runs; hashes alone are not authenticity. No model is trained or
+executed by this function.
+
 ## References and contribution
 
 The previous [PolyHedge](https://github.com/CaptainLEVI-XXX/polyhedge) informs the

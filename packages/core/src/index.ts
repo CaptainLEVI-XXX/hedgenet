@@ -6,3 +6,4 @@ export type { ValuationProblem, PositionProposal } from './valuation.ts';
 export { buildScenarios, SettlementSchema } from './scenarios.ts';
 export type { Settlement, ScenarioLocation } from './scenarios.ts';
 export { solveTeacher, TeacherError } from './teacher.ts';
+export { decodeNeuralProposal } from './decoder.ts';

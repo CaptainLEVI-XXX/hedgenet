@@ -60,6 +60,10 @@ const ProposalSchema = z.strictObject({
 export type ValuationProblem = z.infer<typeof ValuationProblemSchema>;
 export type PositionProposal = z.infer<typeof ProposalSchema>;
 
+export class BudgetExceededError extends Error {
+  constructor() { super('Position cost exceeds budget'); this.name = 'BudgetExceededError'; }
+}
+
 function hashInput(input: z.infer<typeof ValuationInputSchema>) {
   // Schema parsing fixes object-key order; arrays retain their snapshot order.
   return createHash('sha256').update(JSON.stringify(input)).digest('hex');
@@ -125,7 +129,7 @@ export function evaluatePositions(problemInput: unknown, proposalInput: unknown)
   const totalPremium = FinancialDecimal.sum(...positions.map(position => position.premiumUsd));
   const totalFee = FinancialDecimal.sum(...positions.map(position => position.feeUsd));
   const totalCost = totalPremium.plus(totalFee);
-  if (totalCost.gt(problem.budgetUsd)) throw new Error('Position cost exceeds budget');
+  if (totalCost.gt(problem.budgetUsd)) throw new BudgetExceededError();
 
   const payouts = new Map(problem.states.map(state => [state.stateId, new FinancialDecimal(0)]));
   for (const leg of problem.legs) {
