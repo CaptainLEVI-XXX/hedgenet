@@ -207,6 +207,15 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  packages/training:
+    dependencies:
+      '@hedgenet/core':
+        specifier: workspace:*
+        version: link:../core
+      decimal.js:
+        specifier: 10.6.0
+        version: 10.6.0
+
   packages/venue:
     dependencies:
       zod:

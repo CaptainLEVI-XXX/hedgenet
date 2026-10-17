@@ -64,7 +64,9 @@ export async function solveTeacher(input: unknown) {
   bounded(D.sum(...legs.flatMap(leg => leg.levels.map(level => new D(level.cost).times(level.capacity))), 0));
   const rows = ['cost: c' + legs.flatMap(leg => leg.levels.map(level => ` - ${level.cost} ${level.name}`)).join('') + ' = 0'];
   const bounds = [`0 <= c <= ${budget}`, `0 <= m <= ${Math.max(...losses)}`];
-  const generals = ['c', 'm'];
+  // c is an integer sum of integer fills; the optimum m is their integer
+  // maximum. Neither needs an extra integer variable/rounding decision.
+  const generals: string[] = [];
   const binaries: string[] = [];
   legs.forEach((leg, j) => {
     generals.push(`q${j}`); binaries.push(`a${j}`);
@@ -114,7 +116,7 @@ export async function solveTeacher(input: unknown) {
     const risk = Math.max(0, ...losses.map((loss, s) => loss + cost - quantities.reduce((sum, item, j) =>
       sum + item.quantity * legs[j]!.payouts[s]! * SCALE, 0)));
     if (cost > budget || (objective === 'risk' ? risk : cost) !== objectiveTicks) {
-      throw new TeacherError('invalid_solution', 'Solver objective or budget mismatch');
+      throw new TeacherError('invalid_solution', `Solver ${objective} mismatch: cost=${cost}, risk=${risk}, objective=${objectiveTicks}, budget=${budget}`);
     }
     phases.push({ objective, modelHash: hash(text), status: 'Optimal', objectiveTicks });
     return { quantities, cost, risk };

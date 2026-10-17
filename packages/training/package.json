@@ -1,0 +1,8 @@
+{
+  "name": "@hedgenet/training",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/dataset.ts" },
+  "dependencies": { "@hedgenet/core": "workspace:*", "decimal.js": "10.6.0" }
+}

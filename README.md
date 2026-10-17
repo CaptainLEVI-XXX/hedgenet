@@ -395,6 +395,26 @@ exposure support, accepted weights, dataset splits and model-quality gates remai
 separate requirements. These functions prepare numerical inputs, not a trained
 network or a market forecast.
 
+### Grouped training data
+
+Run `node tools/prepare-dataset.ts crypto --development` for 16 development
+examples, then `node tools/prepare-dataset.ts crypto` or `weather` for the frozen
+192-example synthetic experiment. Each of 24 independent book-seed groups stays
+entirely in one split: 96 training, 48 validation and 48 test examples.
+
+The teacher runs in a terminable worker with a 15-minute outer deadline. Every
+attempt is retained; rejected labels make the dataset incomplete, not zero-labeled.
+Private artifacts live under `.amp/in/artifacts/datasets/`. Only the explicit
+`builder/` files contain transferable train/validation features, targets and masks;
+`host-only.json` and the complete attempt log must never go to the coding agent.
+Development seeds are disjoint from the main experiment.
+
+`scorePredictions` applies the trusted decoder and financial evaluator to every
+example, including invalid, zero and harmful predictions. It reports feasibility,
+retained improvement and normalized risk gap with fixed nearest-rank quantiles.
+Passing these numerical gates is **not** artifact acceptance or promotion. These
+synthetic books establish no live market coverage or neural performance.
+
 ## References and contribution
 
 The previous [PolyHedge](https://github.com/CaptainLEVI-XXX/polyhedge) informs the
