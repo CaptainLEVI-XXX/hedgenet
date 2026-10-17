@@ -29,6 +29,8 @@ docs/*
 # Dependencies, generated output, and machine-local files.
 node_modules/
 .next/
+next-env.d.ts
+*.tsbuildinfo
 dist/
 build/
 .venv/

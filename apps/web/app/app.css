@@ -1,0 +1,48 @@
+/* Additions for the production port. Same tokens as the approved mockup (mockup.css). */
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.illustration-label { font-size:11px; color:#705c37; margin-top:6px; }
+.exposure-context .tag { margin-left:4px; }
+.budget-precise { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; font-size:12px; color:var(--muted); }
+.budget-precise input { width:128px; height:36px; padding:6px 10px; border:1px solid #cbd2e0; background:white; font-variant-numeric:tabular-nums; text-align:right; color:var(--ink); }
+.budget-precise input[aria-invalid] { border-color:var(--rust); }
+.budget-problem { font-size:12px; color:#9a322a; margin-top:8px; }
+.stale-banner { padding:10px 24px; background:#fff4de; color:#6d4a12; font-size:13px; border:1px solid var(--line); border-top:0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.stale-banner .text-btn { min-height:28px; padding:0; }
+.stage-line { margin-top:18px; font-size:13px; }
+.text-btn.inline { min-height:0; padding:0; font-size:inherit; }
+.mono { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:11px; overflow-wrap:anywhere; }
+.provenance { margin:14px 0 0; display:grid; gap:10px; font-size:12px; }
+.provenance dt { color:var(--muted); font-size:11px; }
+.provenance dd { margin:2px 0 0; color:var(--ink); }
+.scenario-table { margin:16px 0 8px; }
+.scenario-table caption { text-align:left; font-size:12px; color:var(--muted); padding-bottom:6px; }
+.scenario-table th[scope=row] { font-weight:500; color:var(--ink); font-size:13px; padding:10px 10px 10px 0; border-bottom:1px solid #ebe8e2; }
+.scenario-table td { text-align:right; padding:10px 0 10px 10px; }
+.scenario-table th[scope=col]:not(:first-child) { text-align:right; }
+.live-output { display:block !important; }
+.live-status { display:grid; gap:0; margin-top:6px; }
+.live-status:focus { outline:none; }
+.live-step { display:flex; gap:12px; padding:14px 0; border-top:1px solid var(--line); }
+.live-step:first-child { border-top:0; }
+.live-step small { display:block; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; }
+.live-step strong { display:block; font-size:15px; font-weight:600; margin:2px 0 4px; }
+.live-step p { font-size:12px; }
+.model-step { border-left:2px solid #c3a979; padding-left:12px; }
+.error-step strong { color:#9a322a; }
+.live-actions { display:flex; gap:14px; align-items:center; margin-top:10px; }
+.spinner { width:14px; height:14px; margin-top:4px; flex-shrink:0; border-radius:50%; border:2px solid #c9d3e9; border-top-color:var(--blue); }
+@media(prefers-reduced-motion:no-preference) { .spinner { animation:spin 1s linear infinite; } }
+@keyframes spin { to { transform:rotate(360deg); } }
+.missing-list { margin:4px 0 0; padding-left:18px; font-size:13px; color:var(--ink); columns:2; }
+.suggestion-list { list-style:none; margin:8px 0 0; padding:0; }
+.suggestion-list li { padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.suggestion-list small { display:block; color:var(--muted); font-size:11px; margin-top:3px; }
+.hedge-bottom table td, .hedge-bottom table th { text-align:left; }
+.hedge-bottom h2 .tag { margin-left:8px; vertical-align:middle; }
+.player-row .btn:disabled { opacity:.5; }
+@media(max-width:700px) {
+  .stale-banner { padding:10px 16px; }
+  .budget-precise input { width:120px; }
+  .missing-list { columns:1; }
+  .exposure-context .tag { margin-left:0; }
+}

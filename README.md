@@ -6,6 +6,87 @@ HedgeNet is a research prototype for neural hedge construction, starting with
 prediction markets. It models potential losses; it does not place trades,
 provide insurance, or guarantee protection.
 
+## Run the local app
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Use Node 24 (or the npx wrapper below), then open http://127.0.0.1:3000.
+The app binds to loopback; it is not a public deployment. Bitcoin and rain presets
+have different provenance: Bitcoin uses a trained experimental model in CreateOS;
+rain remains an illustrative allocation with server-side financial accounting.
+Arbitrary descriptions use live Jev intake and the cached catalogue when root
+`.env` contains `JEV_API_KEY` and `pnpm catalogue` has prepared the local cache.
+Keys never belong in `NEXT_PUBLIC_` variables. Run `pnpm build:web` for the app build.
+
+**Model-quality thresholds are advisory for this prototype.** The first three
+Codex-trained candidates missed the original targets; those results are retained.
+The selected Bitcoin checkpoint can now serve experimental simulations with real
+activation/weight traces. Exact budget, depth, identity and financial checks still
+apply. Non-improving candidates are shown as rejected, never recommended.
+
+Choose Bitcoin or enter an exposure through Jev, review the BTC fields, and
+explicitly opt into the synthetic simulation. The model uses fictional $60k/$80k
+settlement buckets, not the discovered live events. Move the budget slider after
+the first run to recalculate; replay animates the completed trace without retraining.
+Weather is not trained; live market confirmation/serving and public deployment
+remain unfinished. No solver silently replaces the network.
+
+### Prepare the existing sandbox for inference
+
+With an authorized existing CreateOS sandbox, the original private checkpoint,
+its neighboring candidate/mechanics artifacts, and the pinned Handwired checkout:
+
+```sh
+HEDGENET_SANDBOX_ID=your-existing-sandbox-id \
+  node tools/prepare-serving.ts /absolute/path/to/checkpoints/checkpoint-0005.json
+```
+
+This is an explicit cloud operation: it resumes the existing sandbox, removes
+the builder's Codex session, uploads verified serving files, compares the serving
+runtime with the original model inside CreateOS, and pauses the sandbox again.
+It creates no new resource or public URL. Private registry/weights remain under
+ignored `.amp/in/serving/`; they are not bundled into Git or the browser.
+
+Every inference verifies artifact and request hashes, runs in CreateOS, and pauses
+the sandbox before returning. The first measured request took about 30 seconds
+end to end, including lifecycle/transport; numerical inference took about 24 ms.
+No subscription/API call or new training occurs per inference. Cloud billing is
+separate and was not measured. Requests are serialized; a surviving operation
+lock must be cleared only after confirming remote termination and sandbox pause.
+
+### Package a protected hosted demo
+
+`node tools/prepare-web-deploy.ts` creates an explicit source/model/catalogue
+allowlist in ignored `.amp/in/web-deploy/`. It requires the prepared private
+serving artifacts and pinned numeric runtime; a Git clone alone has no trained
+weights. Never upload the repository root or add credentials to the bundle.
+
+The generated Dockerfile serves the full Next app. Configure server-side
+`HEDGENET_MODEL_URL` (HTTPS), `HEDGENET_MODEL_TOKEN`, `HEDGENET_PUBLIC_ORIGIN`
+(exact HTTPS origin, no trailing slash), `HEDGENET_DEMO_PASSWORD`, and
+`JEV_API_KEY`. Basic-auth username is `demo`. Paid API attempts are capped at
+10/minute and 100/day per process; use one replica. Counters reset on restart.
+`/api/health` is public and checks web readiness, not model availability.
+
+For a CreateOS sandbox hosting both processes, install/build the allowlisted
+bundle with Node 24 and pnpm 12.4.2, then run:
+
+```sh
+node --env-file=/external/private.env deploy/web/start-sandbox.mjs
+```
+
+The launcher serves Next on port 3000 and the authenticated numeric model only
+on `127.0.0.1:8080`. It supplies explicit sandbox runtime configuration; arbitrary
+HTTP model endpoints remain forbidden. Supply the same secret variables except
+the model URL, which the launcher sets. No training or Codex session is started.
+Keep the environment file outside the bundle and public ingress limited to the
+web service. Hosted serving stays resident rather than pausing after each request;
+it can incur compute charges. Catalogue data is a snapshot, not an automatic
+refresh service. Build success is not proof of a working public deployment.
+
 ## Current implementation
 
 The financial foundation is implemented. It supports three explicit loss rules:
@@ -34,10 +115,10 @@ search. Selected CTF order books can also be read and checked for identity,
 precision and freshness, and bound to full rule text, current status and explicit
 supported fees. Jev now has a bounded, validated adapter and provenance-bearing
 exposure drafts, tested with synthetic responses and one live intake trial.
-An offline optimizer now produces independently checked training references.
-There is **no complete
-live hedge flow, trained model, Codex training harness, or production website yet**. The included
-crypto/weather financial demo is synthetic; it makes no execution claim.
+An offline optimizer produces independently checked training references, and the
+bounded Codex/CreateOS harness has trained a Bitcoin model. The local website
+serves that model against synthetic books. There is **no complete live-market
+hedge flow or production website yet**. Synthetic examples make no fill claim.
 
 ## Run locally
 
@@ -246,9 +327,10 @@ happens per user request.
 
 CreateOS compute, Codex subscription allowance, and Jev API usage are separate.
 Codex CLI 0.160.0 successfully completed device login inside the sandbox and
-reported `Logged in using ChatGPT`. No OpenAI API key was used. This verifies
-authentication, not available subscription quota or a successful coding/model
-request. The sandbox was paused afterward; training has not started.
+authored and ran the training code using ChatGPT subscription authentication, not
+an OpenAI API key. Three candidates completed. Serving preparation removes that
+session; running numeric inference needs no generative-model credentials.
+Remaining subscription quota and compute credit balance are unknown.
 
 ## Core contracts
 
@@ -412,8 +494,32 @@ Development seeds are disjoint from the main experiment.
 `scorePredictions` applies the trusted decoder and financial evaluator to every
 example, including invalid, zero and harmful predictions. It reports feasibility,
 retained improvement and normalized risk gap with fixed nearest-rank quantiles.
-Passing these numerical gates is **not** artifact acceptance or promotion. These
-synthetic books establish no live market coverage or neural performance.
+`passed` now means every decoded result is feasible; `qualityThresholdsMet` retains
+the original quality comparison as advisory evidence. Passing is **not** artifact
+acceptance or promotion. Synthetic books establish no live market coverage.
+
+### Bounded Codex/CreateOS experiment
+
+`tools/run-training.ts` supervises an existing builder sandbox through the CreateOS
+CLI. It requires `HEDGENET_SANDBOX_ID`, authorized ChatGPT device login, prepared main
+and development datasets, and the pinned Handwired reference checkout. Invoke it as
+`node tools/run-training.ts crypto <main-dataset-directory> <development-directory>`
+only with a fresh experiment authorization. It resumes compute and changes egress.
+
+Codex authors candidate source inside CreateOS. The host independently scores
+downloaded numerical outputs and controls checkpoint selection and early stopping.
+No generated candidate code executes on the host. Final labels stay outside the
+builder. A passing numerical report is not promotion; timeout, failed checks or
+incomplete cleanup cannot enable serving. This is a single-owner research workflow,
+not an adversarial multi-tenant security boundary.
+
+The first synthetic crypto experiment produced three mechanically valid candidates,
+each feasible on all 48 validation cases. Median retained teacher improvement was
+47.3%, 52.5% and 51.2%, versus the original 80% target. All were rejected under
+the original policy before held-out evaluation. The owner subsequently made
+quality advisory for the prototype; the selected third candidate is served as
+experimental, without relabeling those historical results as passing. Held-out
+quality remains unestablished; weather was not trained.
 
 ## References and contribution
 
@@ -421,8 +527,10 @@ The previous [PolyHedge](https://github.com/CaptainLEVI-XXX/polyhedge) informs t
 module organization, cached-market approach and premium-inclusive objective.
 Reference inspected: [source revision](https://github.com/CaptainLEVI-XXX/polyhedge/commit/b22a3c989ea3d209010eafacac7f2e62391e9639).
 No upstream application source has been copied into this foundation.
-[Handwired](https://github.com/chenglou/handwired) inspires the planned trainable
-circuit; it is not integrated yet.
+[Handwired](https://github.com/chenglou/handwired) supplies the remote experimental
+circuit runtime, pinned to [this revision](https://github.com/chenglou/handwired/commit/257856e3b221140acb4cc4460626b850c0bd4ff1).
+Its MIT notice accompanies the runtime in the sandbox. Model weights remain local
+private artifacts; no upstream application source is shipped here.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. Credentials, local
 provider state and internal plans stay out of Git. Do not force-add ignored files.

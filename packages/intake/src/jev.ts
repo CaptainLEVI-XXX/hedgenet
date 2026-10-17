@@ -51,7 +51,12 @@ export function createJevClient(options: { apiKey: string; fetchImpl?: typeof fe
               if (!sameKeys(answer.probabilities, questions[id]!.criteria)
                 || !Object.hasOwn(answer.probabilities, answer.choice)) throw new Error('Invalid choices');
               const values = Object.values(answer.probabilities);
-              if (Math.abs(values.reduce((sum, value) => sum + value, 0) - 1) > 0.000001
+              // The pinned service reports cent-rounded scores (observed sum .99).
+              // Permit only their bounded rounding error; retain raw scores without
+              // renormalizing them or changing the downstream suggestion threshold.
+              const centRounded = values.every(value => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8);
+              const tolerance = centRounded ? Math.min(0.02, values.length * 0.005) + 1e-8 : 0.000001;
+              if (Math.abs(values.reduce((sum, value) => sum + value, 0) - 1) > tolerance
                 || answer.probabilities[answer.choice] !== Math.max(...values)) throw new Error('Invalid distribution');
             }
           } catch { throw new JevError('invalid_response'); }
