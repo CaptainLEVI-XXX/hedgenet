@@ -17,12 +17,16 @@ The financial foundation is implemented. It supports three explicit loss rules:
 
 The scenario accounting function calculates **original loss + total cost − payout**
 for each supplied state. It preserves signed gains and compares worst modeled
-loss with the no-hedge case. This is not a complete hedge validator: market
-compatibility, order-book fills, fees and budget feasibility still need their own
-checks before any proposal can be recommended.
+loss with the no-hedge case. The independent position evaluator now derives cost
+and payouts from trusted books, fee schedules and named scenario payoffs. It
+rejects positions exceeding reserved depth, minimum-size rules or the exact budget.
+It does not select positions or establish market compatibility, complete scenario
+coverage, quote freshness or model eligibility. Those checks remain necessary
+before any proposal can be recommended.
 
 There is **no live market integration, trained model, Codex training harness,
-Jev integration, or production website yet**. The included demo is synthetic.
+Jev integration, or production website yet**. The included crypto/weather demo is
+synthetic; it makes no optimality or execution claim.
 
 ## Run locally
 
@@ -67,7 +71,8 @@ Subscription authentication inside the sandbox has not been verified yet.
 ## Core contracts
 
 `@hedgenet/core` exports `LossTemplateSchema`, `ObservationSchema`, `lossAt`, and
-`summarizeScenarioLosses`, plus the inferred template and observation types.
+`summarizeScenarioLosses`, plus `createValuationProblem` and `evaluatePositions`.
+It also exports their template/observation and valuation/proposal input types.
 Schemas reject unknown fields/versions and do not coerce strings into booleans
 or numbers into monetary values.
 
@@ -78,6 +83,35 @@ digits to preserve exact scalar products. Out-of-bound values reject; they are
 not rounded silently. This representation limit does not establish a model's
 supported financial range. Only explicitly supplied scenarios are scored;
 completeness of a real market's state space remains a separate requirement.
+
+### Position valuation
+
+The server calls `createValuationProblem` with trusted `valuation-v1` inputs:
+USD budget, data mode, snapshot ID, rules hash, 1–32 named scenario losses and
+1–16 legs. Each leg supplies minimum size, explicit fees, raw asks (at most 1,000)
+and a 0/1 per-share payout for every scenario. A missing book or fee is invalid;
+an explicitly empty book means zero capacity. These inputs are not supplied by
+the position proposer. The returned SHA-256 binds the parsed snapshot; it does
+not establish authenticity or freshness.
+
+`evaluatePositions(problem, proposal)` requires `positions-v1`, the matching
+`valuationHash`, and one `{ legId, shares }` for every leg, including zeros. Shares
+are canonical nonnegative whole-number strings (up to 12 digits). Extra fields,
+duplicate/unknown/missing identities and changed problem contents reject.
+
+Equal-price asks are merged, sorted ascending and limited to the three cheapest
+distinct levels. Each size is multiplied by 0.9 and floored once before filling.
+Explicit fee-free legs cost only premium. Exponent-one curves use
+`shares × rate × price × (1 − price)`, with each consumed level's fee rounded up to
+five decimals under `ceil-5dp-per-level-v1`. This is our declared **level-based fee
+estimate**, not exact venue rounding or a bound across unknown match fragmentation.
+No positive budget tolerance or silent position repair applies.
+
+Results include fills, premiums, estimated fees, total cost, scenario payouts and
+net losses, provenance and policy IDs. `improvesModeledRisk` means at least $0.01
+less worst modeled loss; it is **not** permission to display a live recommendation.
+Feasible harmful baskets retain negative improvement instead of being hidden.
+This server-side valuation slice is not the full future hedge/model contract.
 
 ## References and contribution
 

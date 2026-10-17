@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { lossAt, summarizeScenarioLosses } from '@hedgenet/core';
+import { createValuationProblem, evaluatePositions, lossAt, summarizeScenarioLosses } from '@hedgenet/core';
 import { exposureFixtures } from '../tests/fixtures/exposures.ts';
 
 console.log('HedgeNet — synthetic financial foundation demo');
@@ -35,3 +35,37 @@ console.table(result.scenarios);
 console.log(`Worst modeled loss: $${result.worstOriginalLossUsd} → $${result.worstNetLossUsd}`);
 console.log(`Modeled risk reduction: $${result.riskReductionUsd}`);
 console.log('Accounting only: market compatibility, order books, fees and budget feasibility are not checked here.');
+
+console.log('\nIndependent position valuation — synthetic books and stipulated payouts.');
+for (const example of [
+  { fixture: exposureFixtures[0], payouts: ['1', '1', '0', '0'],
+    fee: { kind: 'curve', rate: '0.07', exponent: 1 }, cost: '633.6', reduction: '2366.4',
+    netLosses: ['15133.6', '1383.6', '633.6', '633.6'] },
+  { fixture: exposureFixtures[1], payouts: ['1', '1', '1', '1', '0', '0'],
+    fee: { kind: 'none' }, cost: '600', reduction: '2400',
+    netLosses: ['2600', '2600', '-900', '-2399.5', '600', '600'] },
+]) {
+  const problem = createValuationProblem({
+    schemaVersion: 'valuation-v1', currency: 'USD', dataMode: 'synthetic',
+    snapshotId: `synthetic:${example.fixture.name}`, rulesHash: 'a'.repeat(64), budgetUsd: '1000',
+    states: example.fixture.cases.map(({ observation }, index) => ({
+      stateId: `state-${index}`, originalLossUsd: lossAt(example.fixture.template, observation),
+    })),
+    legs: [{
+      legId: 'synthetic:yes', minShares: '5', fee: example.fee,
+      asks: [{ price: '0.2', size: '4000' }],
+      payouts: example.payouts.map((payoutPerShare, index) => ({ stateId: `state-${index}`, payoutPerShare })),
+    }],
+  });
+  const quote = evaluatePositions(problem, {
+    schemaVersion: 'positions-v1', valuationHash: problem.contentHash,
+    positions: [{ legId: 'synthetic:yes', shares: '3000' }],
+  });
+  assert.equal(quote.totalCostUsd, example.cost);
+  assert.equal(quote.riskReductionUsd, example.reduction);
+  assert.deepEqual(quote.scenarios.map(state => state.netLossUsd), example.netLosses);
+  console.log(`${example.fixture.name}: 3,000 proposed shares, $${quote.totalCostUsd} estimated all-in cost.`);
+  console.table(quote.scenarios);
+  console.log(`Worst modeled loss: $${quote.worstOriginalLossUsd} → $${quote.worstNetLossUsd}`);
+}
+console.log('Same evaluator, different exposures. No real settlement/freshness checks, optimality claim or trade recommendation.');

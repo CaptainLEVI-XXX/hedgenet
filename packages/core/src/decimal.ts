@@ -2,7 +2,7 @@ import { Decimal } from 'decimal.js';
 import { z } from 'zod';
 
 // Isolated context: other packages cannot lower our arithmetic precision.
-// Scalar products need at most 48 significant digits; accounting sums at most 49.
+// Loss products need at most 48 significant digits, fee products 60, accounting sums 49.
 export const FinancialDecimal = Decimal.clone({ precision: 80 });
 
 export const ScalarDecimalSchema = z.string().max(26)
