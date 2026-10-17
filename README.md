@@ -180,6 +180,37 @@ missing year or observation time is borrowed from a market's end date. A draft
 is not a confirmed brief or a financial problem. Live API access and language
 accuracy evaluation remain unverified; local checks make no paid calls.
 
+### Confirmation and financial assembly
+
+`createRuleReview(eventRules, { semantics, settlement, evidence })` records a
+**trusted operator's normalization** of full venue rules. It checks canonical
+market/YES/NO/condition identity and verbatim evidence for each selected market.
+Numeric reviews must include the entire event, not a convenient subset. Excerpt
+presence is not proof of interpretation: do not expose this function as an API
+that lets a browser or model certify its own market rules. Automatic rule-text
+interpretation and a review interface are still future work.
+
+`confirmExposure(draft, request, review)` requires the current draft ID/revision,
+explicit loss, budget and semantics, matching event/rules/review hashes, and
+acknowledgments for financial fields, market rules, normal resolution only and
+USD collateral parity. Observation instants normalize to UTC; source, observable,
+unit, location, observation window/statistic and timezone must match exactly.
+Incomplete data, mismatches, expired observations and invalid partitions block.
+The caller must authenticate the user and retain the host-owned draft/review.
+
+`assembleConfirmedValuation(confirmed, review, snapshot)` checks those bindings
+again, enforces snapshot freshness, builds exact scenarios and joins every
+canonical leg to its fresh book and fee schedule. It returns provenance plus a
+`valuation-v1` problem for the independent evaluator; it neither sizes positions
+nor claims neural eligibility. `reviseBudget` takes an expected revision and a
+new exact budget, increments the revision and preserves confirmed semantics,
+without calling Jev. The server must reject late results for an older revision.
+
+Tests exercise asset downside, continuous-temperature and binary-rain scenarios
+with synthetic rules/books. Rounded or discrete temperature markets, voids,
+disputes, depeg and real execution are not covered by this modeled guarantee.
+Hashes detect content drift, not authenticity or correct interpretation.
+
 ## Intended architecture
 
 **User requests:** Jev interprets exposure → the backend selects compatible

@@ -4,7 +4,7 @@ import { lossAt, LossTemplateSchema } from './shapes.ts';
 
 const BoundSchema = z.strictObject({ value: ScalarDecimalSchema, inclusive: z.boolean() });
 const marketFields = { marketId: IdentitySchema, yesLegId: IdentitySchema, noLegId: IdentitySchema };
-const SettlementSchema = z.discriminatedUnion('kind', [
+export const SettlementSchema = z.discriminatedUnion('kind', [
   z.strictObject({ schemaVersion: z.literal('settlement-v1'), kind: z.literal('binary'),
     conditionId: IdentitySchema, ...marketFields }),
   z.strictObject({ schemaVersion: z.literal('settlement-v1'), kind: z.literal('numeric_partition'),
