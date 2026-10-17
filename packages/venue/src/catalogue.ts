@@ -77,7 +77,9 @@ export const gammaPageSchema = z.object({
   })),
 }));
 
-const aliases: Record<string, string> = { btc: 'bitcoin', eth: 'ethereum', ether: 'ethereum' };
+// Discovery aliases only: rainfall and precipitation are not identical settlement semantics.
+const aliases: Record<string, string> = { btc: 'bitcoin', eth: 'ethereum', ether: 'ethereum',
+  rain: 'precipitation', rainfall: 'precipitation' };
 const stopwords = new Set('a an the i my me we our and or in on at of to for is it will be by with need hold hedge protection'.split(' '));
 function isAvailable(market: { closed: boolean | null; active: boolean | null; acceptingOrders: boolean | null }) {
   return market.closed !== true && market.active !== false && market.acceptingOrders !== false;
@@ -100,10 +102,11 @@ export function createCatalogueIndex(input: Catalogue) {
     }
   });
   return {
-    search(query: string, category?: string, now = Date.now()) {
+    search(query: string, category?: string, now = Date.now(), requiredQuery?: string) {
       const ageMs = Math.max(0, now - Date.parse(snapshot.startedAt));
       const status = ageMs > catalogueMaxAgeMs ? 'expired' : ageMs > 30 * 60_000 ? 'degraded' : 'ready';
       const scores = new Map<number, number>();
+      const required = requiredQuery ? tokens(requiredQuery) : [];
       if (status !== 'expired') {
         for (const token of tokens(query)) {
           const matches = postings.get(token);
@@ -111,6 +114,7 @@ export function createCatalogueIndex(input: Catalogue) {
           for (const index of matches) {
             const event = snapshot.events[index]!;
             if (category && !event.categories.some(value => value.toLowerCase() === category.toLowerCase())) continue;
+            if (!required.every(term => postings.get(term)?.has(index))) continue;
             scores.set(index, (scores.get(index) ?? 0) + Math.log(1 + snapshot.events.length / matches.size));
           }
         }

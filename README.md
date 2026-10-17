@@ -184,7 +184,10 @@ accuracy evaluation remain unverified; local checks make no paid calls.
 loaded `createCatalogueIndex` instance. It retrieves up to 20 cached candidates,
 judges at most five in one additional batch and returns at most three suggestions.
 Amounts and date spans do not become lexical topic terms; unfamiliar category
-tags do not exclude weather. The full workflow has a ten-second shared deadline
+tags do not exclude weather. A recognized observable is required in retrieved
+events before the top-20 cutoff, so unrelated uses of “budget” cannot crowd them
+out. Rain/rainfall/precipitation are discovery aliases only, not interchangeable
+settlement rules. The full workflow has a ten-second shared deadline
 and at most two model calls. Each call also retains its five-second limit.
 
 Suggestions always say `needs_rule_review`. Relevance probabilities are not

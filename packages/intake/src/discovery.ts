@@ -33,7 +33,9 @@ export async function intakeExposure(input: unknown, options: { catalogue: Catal
     for (const span of [...draft.spans].reverse()) {
       if (span.kind !== 'observable') query = `${query.slice(0, span.start)} ${query.slice(span.end)}`;
     }
-    const { items, ...metadata } = options.catalogue.search(query);
+    const observable = draft.fields.observable?.value;
+    if (draft.fields.templateId.value === 'terminal_downside') query += ' price';
+    const { items, ...metadata } = options.catalogue.search(query, undefined, Date.now(), observable);
     discovery.catalogue = metadata;
     if (metadata.status === 'expired') discovery.status = 'catalogue_expired';
     else if (items.length === 0) discovery.status = 'no_discovery_match';
