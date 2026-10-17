@@ -33,7 +33,9 @@ Public market discovery now has a persisted categorized catalogue and local
 search. Selected CTF order books can also be read and checked for identity,
 precision and freshness, and bound to full rule text, current status and explicit
 supported fees. Jev now has a bounded, validated adapter and provenance-bearing
-exposure drafts, tested with synthetic responses and one live intake trial. There is **no complete
+exposure drafts, tested with synthetic responses and one live intake trial.
+An offline optimizer now produces independently checked training references.
+There is **no complete
 live hedge flow, trained model, Codex training harness, or production website yet**. The included
 crypto/weather financial demo is synthetic; it makes no execution claim.
 
@@ -319,6 +321,33 @@ net losses, provenance and policy IDs. `improvesModeledRisk` means at least $0.0
 less worst modeled loss; it is **not** permission to display a live recommendation.
 Feasible harmful baskets retain negative improvement instead of being hidden.
 This server-side valuation slice is not the full future hedge/model contract.
+
+### Offline training reference
+
+`await solveTeacher(problem)` uses pinned HiGHS 1.15.3 to minimize worst net loss
+including purchase cost, then minimize cost among risk-equivalent baskets. It
+enforces whole shares, order minima, reserved three-level depth and cheaper-level
+fills. Both phases must return `Optimal`; the separate exact evaluator must accept
+the positions. Timeout, malformed output or solver failure throws rather than
+creating a zero-position training label. A genuinely optimal no-hedge answer is
+valid and retains its zero improvement.
+
+This is a **conservative discretized reference, not an exact financial optimum**.
+Each share's premium and fee are rounded up separately to $0.00001, scenario loss
+is rounded up, and budget is rounded down. This bounds the evaluator's declared
+level-fee estimate, not real exchange execution. Near a budget boundary it can
+exclude an otherwise feasible share. Results distinguish reference risk/cost
+from independently evaluated risk/cost and retain input binding, solver settings,
+phase model hashes and elapsed time. They cannot replace neural output silently.
+
+The adapter rejects more than 1,000,000 reserved shares per leg, or encoded
+monetary values/aggregate full-depth cost above 1,000,000,000,000 ticks ($10 million).
+These are solver representation limits, not an accepted model's support bounds.
+Each phase has a native two-second limit, zero MIP gap and fixed seed 17.
+The WASM solve is synchronous and blocks its calling thread; loading, parsing and
+checking are outside that native limit. Run it offline under an outer process
+deadline, not in a request handler. No neural training or cloud compute is
+performed by this function.
 
 ## References and contribution
 

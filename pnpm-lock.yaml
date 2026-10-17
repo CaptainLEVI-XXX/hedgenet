@@ -188,6 +188,9 @@ importers:
       decimal.js:
         specifier: 10.6.0
         version: 10.6.0
+      highs:
+        specifier: 1.15.3
+        version: 1.15.3
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -388,6 +391,10 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  highs@1.15.3:
+    resolution: {integrity: sha512-5rzjBlAkqRxr7FOv+iZjxF8nNfKsEt8uOaP3S6gls6yRf4+Jv4BqBIE3iPFsgfOHutQBMNxRE9jWhxRAM7Oycw==}
+    engines: {node: '>=18'}
 
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
@@ -716,6 +723,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  highs@1.15.3: {}
 
   lightningcss-android-arm64@1.33.0:
     optional: true

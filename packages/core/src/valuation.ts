@@ -47,7 +47,7 @@ const ValuationInputSchema = z.strictObject({
   });
 });
 
-const ValuationProblemSchema = ValuationInputSchema.safeExtend({ contentHash: HashSchema });
+export const ValuationProblemSchema = ValuationInputSchema.safeExtend({ contentHash: HashSchema });
 const ProposalSchema = z.strictObject({
   schemaVersion: z.literal('positions-v1'),
   valuationHash: HashSchema,
