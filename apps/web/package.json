@@ -1,0 +1,18 @@
+{
+  "name": "@hedgenet/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "next dev --hostname 127.0.0.1", "build": "next build", "start": "next start --hostname 0.0.0.0 --port 3000" },
+  "dependencies": {
+    "@hedgenet/core": "workspace:*",
+    "@hedgenet/intake": "workspace:*",
+    "@hedgenet/venue": "workspace:*",
+    "decimal.js": "10.6.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": { "@types/react": "^19.0.0", "@types/react-dom": "^19.0.0" }
+}

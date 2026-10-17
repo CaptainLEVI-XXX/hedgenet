@@ -43,7 +43,7 @@ function sourceManifest(root, destination) {
   }).split('\0').filter(Boolean);
   const manifest = {};
   for (const file of [...new Set(files)].sort()) {
-    if (!/^(packages\/|tests\/|examples\/|tools\/|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|tsconfig\.json$|vitest\.config\.ts$|\.node-version$|\.gitignore$)/.test(file)) continue;
+    if (!/^(apps\/|packages\/|tests\/|examples\/|tools\/|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|tsconfig\.json$|vitest\.config\.ts$|\.node-version$|\.gitignore$)/.test(file)) continue;
     if (file.split('/').some(part => /^(\.env(rc)?($|\.)|node_modules$|\.git$|\.projects$|\.amp$)/.test(part))
       || /\.(env|pem|key)(\.|$)/.test(file)) continue;
     const path = resolve(root, file);

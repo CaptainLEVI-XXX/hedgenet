@@ -9,6 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "dev": "node node_modules/next/dist/bin/next dev apps/web --hostname 127.0.0.1",
+    "build:web": "pnpm --filter @hedgenet/web build",
     "demo:foundation": "node examples/financial-foundation.ts",
     "catalogue": "node tools/catalogue.ts",
     "lab:check": "node tools/lab.mjs"
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "next": "16.4.2",
     "typescript": "5.9.3",
     "vitest": "5.0.5"
   }

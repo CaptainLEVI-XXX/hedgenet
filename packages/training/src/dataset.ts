@@ -137,7 +137,11 @@ export function scorePredictions(rows: readonly LabeledExample[], predictions: r
     sampleCount: rows.length, nontrivialCount: retained.length, feasibleCount, regressionCount, noImprovementCount,
     retainedImprovement: { median, p10 }, normalizedRiskGapP95: p95,
     absoluteRiskGapUsdP95: quantile(absoluteGaps, 0.95),
-    passed: feasibleCount === rows.length && retained.length >= 12 && median !== null && median >= 0.8
+    // Owner-approved prototype policy: retain quality measurements without blocking
+    // experimentation. Serving still refuses to recommend non-improving baskets.
+    qualityPolicy: 'advisory' as const,
+    passed: feasibleCount === rows.length,
+    qualityThresholdsMet: retained.length >= 12 && median !== null && median >= 0.8
       && p10 !== null && p10 >= 0.5 && p95 <= 0.05,
     cases };
 }

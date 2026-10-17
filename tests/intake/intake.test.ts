@@ -94,6 +94,12 @@ it('validates transport identities, choices, distributions, primitive and usage 
   const question = { q: { type: 'choice' as const, instructions: 'Which?', criteria: { a: 'A', b: 'B' } } };
   const valid = await client({ q: 'a' }).ask({}, question);
   expect(valid.answers.q?.choice).toBe('a');
+  // Observed Jev responses round each probability to two decimal places.
+  // Keep the scores as reported; do not turn a rounding discrepancy into an outage.
+  for (const b of [0.19, 0.21]) {
+    const rounded = await client({ q: 'a' }, body => { body.answers.q.probabilities = { a: 0.8, b }; }).ask({}, question);
+    expect(rounded.answers.q?.probabilities).toEqual({ a: 0.8, b });
+  }
   for (const mutate of [
     (b: any) => { b.model = 'jev-latest'; },
     (b: any) => { delete b.answers.q; },
@@ -101,6 +107,7 @@ it('validates transport identities, choices, distributions, primitive and usage 
     (b: any) => { b.answers.q.type = 'noul'; },
     (b: any) => { b.answers.q.choice = 'invented'; },
     (b: any) => { b.answers.q.probabilities = { a: 0.9, b: 0.9 }; },
+    (b: any) => { b.answers.q.probabilities = { a: 0.8, b: 0.18 }; },
     (b: any) => { b.answers.q.probabilities = { a: 0.1, b: 0.9 }; },
     (b: any) => { b.answers.q.probabilities = { a: 1 }; },
     (b: any) => { b.usage.input_tokens = -1; },

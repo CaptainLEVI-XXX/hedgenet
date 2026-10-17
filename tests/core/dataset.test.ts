@@ -52,7 +52,9 @@ it('counts zero, harmful and invalid predictions instead of hiding them with abs
   const zero = scorePredictions(rows, zeros);
   expect(zero.nontrivialCount).toBeGreaterThanOrEqual(12);
   expect(zero.retainedImprovement.median).toBe(0);
-  expect(zero.passed).toBe(false);
+  expect(zero.passed).toBe(true); // Quality is advisory; valid zero output is not a recommended hedge.
+  expect(zero.qualityThresholdsMet).toBe(false);
+  expect(zero.qualityPolicy).toBe('advisory');
   expect(zero.feasibleCount).toBe(48);
   const invalid = scorePredictions(rows, rows.map(() => [NaN, 0]));
   expect(invalid.feasibleCount).toBe(0);
@@ -61,6 +63,7 @@ it('counts zero, harmful and invalid predictions instead of hiding them with abs
   expect(() => scorePredictions(rows, [])).toThrow(/count/i);
   const teacher = scorePredictions(rows, rows.map(row => row.targets.slice(0, row.problem.legs.length)));
   expect(teacher.passed).toBe(true);
+  expect(teacher.qualityThresholdsMet).toBe(true);
   expect(teacher.retainedImprovement.p10).toBeGreaterThan(0.98);
   expect(teacher.acceptance).toBe('not_evaluated'); // Numerical checks cannot promote weights.
   const harmful = scorePredictions(rows, rows.map(() => [0, 1]));
