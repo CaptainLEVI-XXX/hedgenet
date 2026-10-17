@@ -371,6 +371,27 @@ session ownership or request ordering. The future host must supply those gates
 and reject late runs; hashes alone are not authenticity. No model is trained or
 executed by this function.
 
+### Frozen neural inputs
+
+`createFeatureContract` binds `features-v1`, one rules hash, canonical real-leg
+IDs, a USD loss scale of at least 1, and 738 explicit normalized decimal ranges.
+`encodeFeatures(problem, contract)` checks those bindings and the scenario
+builder's `state-0`, `state-1`, … ordering. Scenario count and loss values may vary
+within the declared ranges; changing the event/rules or leg ordering cannot.
+
+The encoder produces 738 FP32 values: budget/maximum loss, 32 losses, 32 state
+masks, a 16×32 leg-major payout matrix, and ten fields per leg (availability, fee
+rate, minimum, whole-share step and three price/size pairs). Money and quantities
+use the same frozen scale; padded slots are zero. Depth is merged and reserved
+once. Decimal range checks happen **before** FP32 conversion, without clamping
+the exposure. Returned hashes bind the valuation, contract and ordered IDs.
+
+Freeze these ranges before training; do not widen them to admit a failing test
+case. Range membership does not prove distribution coverage. Full template/
+exposure support, accepted weights, dataset splits and model-quality gates remain
+separate requirements. These functions prepare numerical inputs, not a trained
+network or a market forecast.
+
 ## References and contribution
 
 The previous [PolyHedge](https://github.com/CaptainLEVI-XXX/polyhedge) informs the
