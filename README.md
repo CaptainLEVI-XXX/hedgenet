@@ -32,8 +32,9 @@ faithfully describe a live market or the user's exposure.
 Public market discovery now has a persisted categorized catalogue and local
 search. Selected CTF order books can also be read and checked for identity,
 precision and freshness, and bound to full rule text, current status and explicit
-supported fees. There is **no complete live hedge flow, trained model,
-Codex training harness, Jev integration, or production website yet**. The included
+supported fees. Jev now has a bounded, validated adapter and provenance-bearing
+exposure drafts, tested with synthetic provider responses. There is **no complete
+live hedge flow, trained model, Codex training harness, or production website yet**. The included
 crypto/weather financial demo is synthetic; it makes no execution claim.
 
 ## Run locally
@@ -152,6 +153,32 @@ establish that they form a complete numeric partition or share the user's exact
 source, location, time and loss meaning. Jev/intake and scenario construction must
 establish those separately. Reads are sampled, not transactional exchange state;
 no price/fill guarantee, access permission or void/dispute handling is implied.
+
+### Exposure interpretation
+
+`@hedgenet/intake` exports `createJevClient({ apiKey })` and
+`interpretExposure({ text, timezone, interpretedAt }, client)`. Supply the server's
+`JEV_API_KEY` explicitly; the library does not read environment files. The adapter
+uses the TypeSafe System One API, pinned `jev-1.13.0`, a five-second deadline and
+no retries. It checks answer IDs, primitive types, all offered choices, finite
+probability distributions, model identity and token usage. Provider failures
+return `dependency_unavailable` for manual entry, not a market refusal.
+
+One batched request assigns roles to exact source spans. Drafts retain offsets,
+raw text, normalized decimal strings and the original judgments. The initial
+0.80 probability / 0.20 margin suggestion policy is **not calibrated accuracy**;
+every field remains unconfirmed. Supported loss formulas include asset downside,
+capped threshold loss and conditional fixed loss, including weather. Missing
+caps, negative holdings and unsupported path-dependent losses are not repaired
+into a different exposure. Zero budget and negative temperature are valid.
+
+Input is bounded to 4,000 characters and 30 spans. This first extractor recognizes
+explicit English decimal amounts, date phrases and BTC/ETH/weather aliases.
+Abbreviated/exponential amounts, other aliases and complete observation/source/
+station details require manual clarification. Dates retain their wording: no
+missing year or observation time is borrowed from a market's end date. A draft
+is not a confirmed brief or a financial problem. Live API access and language
+accuracy evaluation remain unverified; local checks make no paid calls.
 
 ## Intended architecture
 
