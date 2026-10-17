@@ -31,7 +31,8 @@ faithfully describe a live market or the user's exposure.
 
 Public market discovery now has a persisted categorized catalogue and local
 search. Selected CTF order books can also be read and checked for identity,
-precision and freshness. There is **no complete live hedge flow, trained model,
+precision and freshness, and bound to full rule text, current status and explicit
+supported fees. There is **no complete live hedge flow, trained model,
 Codex training harness, Jev integration, or production website yet**. The included
 crypto/weather financial demo is synthetic; it makes no execution claim.
 
@@ -118,8 +119,39 @@ Call `assertBooksFresh(snapshot)` again when producing a result. It checks the
 content hash, at most five seconds of fetch span and at most 30 seconds since
 fetch start. A venue timestamp is its update time, not our retrieval time. Hashes
 detect drift, not authenticity: the server must own the trusted snapshot. Public
-reads were exercised, but fees, full rules, event revalidation and semantic
-compatibility are still required before recommending any positions.
+reads were exercised; use the selected-market boundary below to bind rules/fees.
+
+### Rules, fees and selected-market snapshots
+
+`fetchEventRules(eventId, { dataMode: 'live' })` retrieves full parent/child rule
+text and a `rulesHash` for confirmation. The hash includes resolution material,
+outcome identities and protocol fields, but excludes prices, volume, status and
+fees. Financial configuration is re-read for each snapshot rather than frozen
+at confirmation. Unknown observations remain `null`; end dates are not silently
+treated as observation times.
+
+`fetchMarketSnapshot({ eventId, expectedRulesHash, marketIds }, options)` re-fetches
+that event, blocks changed rules or unavailable/unknown selected-market status,
+then retrieves both YES/NO books for each of 1–8 explicit selected markets. It
+joins outcomes by label even when Gamma returns NO first, verifies CTF identity,
+and requires Gamma/book minimum size, tick and negative-risk flags to agree.
+Unknown, contradictory or unsupported fees block; explicit disabled fees and
+exponent-one taker schedules are supported. Numeric JSON fee/constraint tokens
+are read exactly using Node 24's reviver source rather than rounded through JS
+numbers. Full original event text is retained with the snapshot.
+
+Recheck `assertMarketSnapshotFresh(snapshot)` at completion. The outer hash binds
+rules, interpreted fees, selected legs and books; metadata must also be at most
+30 seconds old. `MarketSnapshotError.code` distinguishes rule drift, unavailable
+markets/fees, unsupported markets, changed constraints and provider/data errors;
+input-schema and underlying book/network failures may also throw.
+
+These are **host-owned indicative snapshots, not confirmed hedges**. Every result
+retains `reviewStatus: needs_semantic_review`. Selecting several markets does not
+establish that they form a complete numeric partition or share the user's exact
+source, location, time and loss meaning. Jev/intake and scenario construction must
+establish those separately. Reads are sampled, not transactional exchange state;
+no price/fill guarantee, access permission or void/dispute handling is implied.
 
 ## Intended architecture
 
