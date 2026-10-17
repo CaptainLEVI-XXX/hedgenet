@@ -44,11 +44,14 @@ incur memory and storage charges.
 
 Commit product source, dependency manifests and lockfiles, useful public
 documentation, and tests with synthetic or properly sanitized fixtures.
+The non-secret `.projects/state.json` service manifest is also committed so
+Stripe Projects can recognize the public stack. Review it for credentials before
+committing; this exception does not include local resource/account mappings.
 
 Keep these local; `.gitignore` excludes them:
 
 - All `.env` and `.env.*` files, including `.env.example`, plus `*.env` variants.
-- The entire `.projects/` directory, including provisioning state and its vault.
+- Everything in `.projects/` except `state.json`, including local state and its vault.
 - Internal product/preparation documents and `docs/implementation/`.
 - Local `AGENT.md`, `AGENTS.md`, `HARNESS.md`, and lab packets/decisions in `docs/`.
 - Root `stages/`, `plans/`, and `implementation/` directories.
@@ -137,7 +140,7 @@ git diff --cached
 Verify local-only paths are ignored when changing ignore rules:
 
 ```sh
-git check-ignore -v .env .projects/state.json docs/implementation/00-system-contract.md
+git check-ignore -v .env .projects/state.local.json docs/implementation/00-system-contract.md
 ```
 
 Never use `git add -f` to bypass these exclusions. If a private file was already

@@ -25,8 +25,8 @@ export function Composer({ draft, notice, busy, onDraft, onChoose, onSubmit }: {
           placeholder="I’m worried about… Tell us what could happen, when, and how much you could lose."
           onChange={event => onDraft(event.target.value)} />
         <div className="composer-bottom">
-          <p id="composer-hint">Crypto opens an experimental synthetic simulation. Weather is illustrative. Other text runs live intake on this server.</p>
-          <button className="btn primary" type="submit" disabled={busy}>Build my hedge <span className="arrow" aria-hidden="true">↗</span></button>
+          <p id="composer-hint">Run BTC downside with fictional markets for 30 Oct 2026. Other exposures: discovery or illustration only.</p>
+          <button className="btn primary" type="submit" disabled={busy}>Build my demo hedge <span className="arrow" aria-hidden="true">↗</span></button>
         </div>
         <p id="input-notice" className="error" role="status">{notice}</p>
       </form>
@@ -40,7 +40,7 @@ export function Composer({ draft, notice, busy, onDraft, onChoose, onSubmit }: {
           </button>
         ))}
       </div>
-      <div className="intro-foot">Fictional markets only. Live intake drafts an interpretation, not a tradable hedge. BTC model runs require explicit confirmation. No wallet needed.</div>
+      <div className="intro-foot">Experimental model. Synthetic prices. No trades or wallet required.</div>
     </section>
   );
 }

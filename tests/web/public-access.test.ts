@@ -37,13 +37,26 @@ it('protects pages, assets, and APIs; fails closed without a password; health is
   }
 });
 
-it('caps aggregate paid calls across endpoints and resets the short window without capping previews', async () => {
+it('opens pages only with explicit public demo opt-in and a valid HTTPS origin', () => {
+  vi.stubEnv('HEDGENET_PUBLIC_DEMO', 'true');
   vi.stubEnv('HEDGENET_PUBLIC_ORIGIN', 'https://demo.example');
   vi.stubEnv('HEDGENET_DEMO_PASSWORD', password);
+  for (const path of ['/', '/_next/static/app.js', '/api/intake']) expect(proxy(request(path)).status).toBe(200);
+  expect(() => assertSameOrigin(request('/api/neural', { origin: 'https://evil.example' }))).toThrow();
+  vi.stubEnv('HEDGENET_PUBLIC_ORIGIN', 'http://demo.example');
+  expect(proxy(request()).status).toBe(503);
+  vi.stubEnv('HEDGENET_PUBLIC_ORIGIN', '');
+  expect(proxy(request()).status).toBe(503);
+});
+
+it('caps anonymous public calls across endpoints and resets the short window without capping previews', async () => {
+  vi.stubEnv('HEDGENET_PUBLIC_ORIGIN', 'https://demo.example');
+  vi.stubEnv('HEDGENET_PUBLIC_DEMO', 'true');
+  vi.stubEnv('HEDGENET_DEMO_PASSWORD', '');
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2030-01-01T00:00:00Z'));
   const paid = (path: string) => new Request(`http://internal:3000${path}`, { method: 'POST', body: '{}', headers: {
-    ...auth, origin: 'https://demo.example', 'content-type': 'application/json',
+    origin: 'https://demo.example', 'content-type': 'application/json',
   } });
   for (let i = 0; i < 10; i++) await guardedJson(paid(i % 2 ? '/api/intake' : '/api/neural'), 100);
   await expect(guardedJson(paid('/api/intake'), 100)).rejects.toMatchObject({ status: 429 });

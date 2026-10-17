@@ -1,7 +1,5 @@
 # Environment files and credentials, at any directory depth.
 # No .env.example exception: keep all environment files local.
-.env
-.env.*
 *.env
 *.env.*
 .envrc
@@ -10,7 +8,6 @@
 *.key
 
 # Local provisioning state, credentials, caches, and review artifacts.
-/.projects/
 /.amp/in/
 
 # Private preparation and implementation planning, not product source.
@@ -41,3 +38,14 @@ __pycache__/
 .DS_Store
 
 .amp/*
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+
+# Stripe's public stack checker needs only this non-secret service manifest.
+/.projects/*
+!/.projects/state.json

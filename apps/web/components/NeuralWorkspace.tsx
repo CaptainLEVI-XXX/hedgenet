@@ -9,13 +9,16 @@ import { LossPlot } from './LossPlot.tsx';
 import { NeuralCircuit } from './NeuralCircuit.tsx';
 import { BudgetControl } from './BudgetControl.tsx';
 import type { BudgetIntent } from './BudgetControl.tsx';
+import { MarketLinks } from './MarketLinks.tsx';
+import type { MarketLink } from './MarketLinks.tsx';
 
 export type NeuralDraft = { units?: string | undefined; referencePriceUsd?: string | undefined; budgetUsd?: string | undefined };
-export function NeuralWorkspace({ initial = {}, onEdit, inline = false }: { initial?: NeuralDraft; onEdit?: () => void; inline?: boolean }) {
+export function NeuralWorkspace({ initial = {}, onEdit, autoRun = false, events }: {
+  initial?: NeuralDraft; onEdit?: () => void; autoRun?: boolean; events?: MarketLink[];
+}) {
   const [units, setUnits] = useState(initial.units ?? '');
   const [referencePriceUsd, setReference] = useState(initial.referencePriceUsd ?? '');
   const [budgetUsd, setBudget] = useState(initial.budgetUsd ?? DEFAULT_BUDGET_USD);
-  const [consent, setConsent] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<NeuralPreview | null>(null);
@@ -24,7 +27,7 @@ export function NeuralWorkspace({ initial = {}, onEdit, inline = false }: { init
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastRequest = useRef<string | null>(null);
   const reducedMotion = useReducedMotion();
-  const replay = useReplay(reducedMotion);
+  const replay = useReplay(reducedMotion, true);
   useEffect(() => () => { clearTimeout(debounce.current); ++revision.current; controller.current?.abort(); }, []);
   // Keep the previous result visible but marked stale when confirmed inputs change.
   const invalidate = () => { clearTimeout(debounce.current); ++revision.current; controller.current?.abort(); lastRequest.current = null; setPending(false); setError(null); };
@@ -36,7 +39,7 @@ export function NeuralWorkspace({ initial = {}, onEdit, inline = false }: { init
     clearTimeout(debounce.current);
     const inputProblem = !decimal.test(units) || Number(units) < 0.1 || Number(units) > 5 ? 'Enter BTC holdings from 0.1 to 5.'
       : !decimal.test(referencePriceUsd) || Number(referencePriceUsd) < 35000 || Number(referencePriceUsd) > 105000 ? 'Enter a reference price from $35,000 to $105,000.' : budgetProblem(nextBudget);
-    if (inputProblem || !consent) { setError(inputProblem ?? 'Confirm the synthetic simulation to continue.'); return; }
+    if (inputProblem) { setError(inputProblem); return; }
     const key = JSON.stringify([units, referencePriceUsd, nextBudget]);
     if (lastRequest.current === key) return;
     lastRequest.current = key;
@@ -52,10 +55,17 @@ export function NeuralWorkspace({ initial = {}, onEdit, inline = false }: { init
       setResult(response.data); replay.play(0, 4000);
     } catch (e) { if (current === revision.current) { lastRequest.current = null; setPending(false); setError((e as Error).name === 'AbortError' ? 'Request cancelled. Retry when ready.' : 'Simulation failed. Retry when ready.'); } }
   };
+  // The composer action explicitly requests a demo simulation. Defer one tick so
+  // React's development remount cancels the first schedule instead of double-running.
+  useEffect(() => {
+    if (!autoRun || problem) return;
+    const timer = setTimeout(() => void run(), 0);
+    return () => clearTimeout(timer);
+  }, []);
   const changeBudget = (value: string, intent: BudgetIntent) => {
     setBudget(value);
     clearTimeout(debounce.current);
-    if (intent === 'drag' || !result || !consent || pending) return;
+    if (intent === 'drag' || !result || pending) return;
     if (intent === 'now') void run(value);
     else debounce.current = setTimeout(() => void run(value), 600);
   };
@@ -64,55 +74,47 @@ export function NeuralWorkspace({ initial = {}, onEdit, inline = false }: { init
     const a = document.createElement('a'); a.href = url; a.download = 'hedgenet-neural-result.json'; a.click(); URL.revokeObjectURL(url);
   };
   const improved = result?.outcome === 'improvement';
-  const stale = Boolean(result && (!consent || problem || pending || Number(units) !== Number(result.exposure.units)
+  const stale = Boolean(result && (problem || pending || Number(units) !== Number(result.exposure.units)
     || Number(referencePriceUsd) !== Number(result.exposure.referencePriceUsd) || Number(budgetUsd) !== Number(result.valuation.budgetUsd)));
-  return <section aria-label="Experimental BTC simulation">
-    <style>{`
-      .neural-form { padding: 28px; border-bottom: 1px solid #e4e7ed; display: grid; gap: 20px; }
-      .neural-form p { margin: 10px 0 0; line-height: 1.6; }
-      .neural-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-      .neural-fields > label { display: grid; align-content: start; gap: 9px; font-size: 13px; color: #68738a; }
-      .neural-fields input:not([type=range]) { width: 100%; min-width: 0; padding: 12px; border: 1px solid #cdd5e4; border-radius: 7px; font: inherit; font-size: 16px; color: #243b6a; background: #fff; }
-      .neural-fields .lab-budget { width: auto; min-width: 0; }
-      .neural-consent { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.6; }
-      .neural-consent input { flex-shrink: 0; margin-top: 4px; width: 17px; height: 17px; accent-color: #2f5cf5; }
-      .neural-form .btn { justify-self: start; }
-      .neural-raw { max-height: 420px; max-width: 100%; overflow: auto; font-size: 12px; }
-      .provenance dd { overflow-wrap: anywhere; }
-      @media (max-width: 640px) { .neural-fields { grid-template-columns: 1fr; } .neural-form { padding: 20px; } }
-    `}</style>
-    <div className="hedge-heading"><h1>{inline ? 'Try a separate BTC simulation' : 'Your BTC simulation.'}</h1>{onEdit && <button className="text-btn" onClick={onEdit}>Edit exposure</button>}</div>
+  return <section className="neural-workspace" aria-label="Experimental BTC simulation">
+    <div className="hedge-heading"><h1>Your downside, mapped.</h1><div className="workspace-heading-actions"><span className="tag">Synthetic demo</span>{onEdit && <button className="text-btn" onClick={onEdit}>Edit exposure</button>}</div></div>
     <div className="hedge-sheet">
       <form className="neural-form" onSubmit={e => { e.preventDefault(); void run(); }}>
-        <div><span className="tag amber">Experimental · synthetic markets</span><p>BTC downside at 30 October 2026, 16:00 UTC. This does not confirm a real market match or create tradable positions.</p></div>
-        <div className="neural-fields">
-          <label>BTC holdings (0.1–5)<input required inputMode="decimal" value={units} onChange={e => { invalidate(); setUnits(e.target.value); }} /></label>
-          <label>Reference price (USD)<input required inputMode="decimal" value={referencePriceUsd} onChange={e => { invalidate(); setReference(e.target.value); }} /></label>
+        <div className="neural-exposure">
+          <span className="small muted">Bitcoin downside · 30 Oct 2026</span>
+          <div className="neural-fields">
+            <label>BTC holdings<input aria-label="BTC holdings (0.1–5)" required inputMode="decimal" value={units} onChange={e => { invalidate(); setUnits(e.target.value); }} /></label>
+            <label>Reference price (USD)<input required inputMode="decimal" value={referencePriceUsd} onChange={e => { invalidate(); setReference(e.target.value); }} /></label>
+          </div>
+          {(!result || error || stale && !pending) && <button className="btn quiet" disabled={pending} type="submit">{pending ? 'Running…' : error ? 'Retry simulation' : result ? 'Update simulation' : 'Run simulation'}</button>}
+          {!autoRun && !result && <p className="small muted">Run with fictional BTC markets, not live positions.</p>}
+        </div>
+        <div className="neural-budget">
           <BudgetControl value={budgetUsd} problem={budgetProblem(budgetUsd)} onChange={changeBudget} />
         </div>
-        <label className="neural-consent"><input type="checkbox" checked={consent} onChange={e => { invalidate(); setConsent(e.target.checked); }} />I confirm these BTC inputs and opt into fictional synthetic markets settling at 2026-10-30 16:00 UTC, not my live exposure or catalogue matches.</label>
-        <button className="btn primary" disabled={pending} type="submit">{pending ? 'Running inference…' : error ? 'Retry simulation' : 'Run experimental model'}</button>
-        <p className="small muted">After your first run, release the slider to recalculate. No training or code generation happens here.</p>
         {error && <p role="alert" className="error">{error}</p>}
-        {pending && <p role="status">Waiting for inference and exact financial checks. No progress estimate is available.</p>}
       </form>
-      {result && <>
-        {stale && <div className="stale-banner" role="status">Previous result · {result.exposure.units} BTC at {money(result.exposure.referencePriceUsd)}, budget {money(result.valuation.budgetUsd)}. {pending ? 'Recalculating…' : 'Confirm and run to update.'}</div>}
+      {stale && <div className="stale-banner" role="status">{pending ? 'Updating…' : 'Inputs changed. Update to refresh.'} Showing the previous {money(result!.valuation.budgetUsd)} result.</div>}
         <div className="lab-stage"><div className="lab-network">
-          <div className="lab-network-head"><h2>Inside the finished inference</h2><span>Measured trace</span></div>
-          <div className="lab-svg-scroll" tabIndex={0} aria-label="Neural trace; scroll horizontally"><NeuralCircuit preview={result} progress={replay.progress} reducedMotion={reducedMotion} /></div>
-          <p className="mobile-pan">Swipe to inspect the finished trace.</p>
-          <button className="btn quiet" onClick={() => replay.play(0, 4000)}>Replay finished trace</button> <button className="text-btn" onClick={replay.toggle}>{replay.playing ? 'Pause' : 'Play'}</button>
-          <p className="small muted">Presentation only, not training or inference progress. Blue = positive weight; amber = negative. Activation values are actual ReLU outputs.</p>
+          <div className="lab-network-head"><h2>{result ? 'Measured inference' : 'Your neural hedge'}</h2>{result && <button className="text-btn" onClick={replay.toggle} disabled={reducedMotion} aria-label={replay.playing ? 'Pause animation' : 'Play animation'}>{replay.playing ? 'Ⅱ Pause' : '▷ Play'}</button>}</div>
+          {result ? <>
+            <div className="lab-svg-scroll" tabIndex={0} aria-label="Neural trace; scroll horizontally"><NeuralCircuit preview={result} progress={replay.progress} reducedMotion={reducedMotion} /></div>
+            <div className="neural-caption"><span>{reducedMotion ? 'Static trace' : 'Looping replay'} · not live training</span><span>{result.execution.inferenceMs.toFixed(0)} ms inference</span></div>
+          </> : <div className="neural-awaiting" role="status">{pending ? <><span className="spinner" aria-hidden="true" />Running model &amp; financial checks…</> : error ? 'No verified result yet.' : 'Enter your BTC exposure to begin.'}</div>}
         </div><aside className="lab-output">
-          <h2>{improved ? 'Synthetic candidate' : 'No improvement. Candidate rejected.'}</h2>
-          {improved ? <><LossPlot preview={result} reveal={1} /><p>Worst modeled loss {money(result.valuation.worstNetLossUsd)}, versus {money(result.valuation.worstOriginalLossUsd)} without a hedge.</p>
+          <h2>{!result ? 'Your result' : improved ? 'Simulated hedge' : 'No improving hedge'}</h2>
+          {result && improved ? <>
+            <div className="neural-metrics"><div><span>Simulated cost</span><strong>{money(result.valuation.totalCostUsd)}</strong></div><div><span>Worst remaining loss</span><strong>{money(result.valuation.worstNetLossUsd)}</strong></div></div>
+            <LossPlot preview={result} reveal={1} />
+            <p className="small muted">Without a hedge: {money(result.valuation.worstOriginalLossUsd)} worst loss.</p>
             {result.valuation.positions.filter(p => Number(p.shares) > 0).map(p => { const leg = result.legs.find(l => l.legId === p.legId); return <div className="position-row" key={p.legId}><span>{leg?.side} · {leg?.label}</span><strong>{shares(p.shares)} shares</strong></div>; })}
-            <p>Simulated cost {money(result.valuation.totalCostUsd)} · not an order or recommendation.</p></>
-            : <p>The exact evaluator found no worst-loss improvement. No basket is recommended. The rejected candidate and its trace remain available for inspection below.</p>}
-          <p className="small muted">Partial protection only. Below the lowest synthetic bucket, payouts stop growing while BTC losses continue.</p>
+            <p className="small muted">Partial protection. Fictional positions, not orders.</p></>
+            : <p className="empty-result">{result ? 'This candidate does not reduce worst-case loss. No basket is recommended.' : 'Positions and remaining risk appear after verification.'}</p>}
+          <MarketLinks {...(events ? { events } : {})} />
         </aside></div>
-        <details className="hedge-details"><summary>Experimental quality, provenance &amp; {improved ? 'candidate' : 'rejected candidate'} details</summary>
+      {result && <>
+        <details className="hedge-details"><summary>Details &amp; assumptions</summary>
+          <p>Confirmed synthetic simulation: BTC downside at 30 October 2026, 16:00 UTC. The animation replays measured activations; the model is not being trained here.</p>
           <p>Experimental trained model; quality policy is advisory, not an acceptance threshold. No live books, liquidity or market compatibility checked.</p>
           {result.model.qualityWarnings.map((warning, i) => <p key={i}>{warning}</p>)}
           <dl className="provenance"><div><dt>Model</dt><dd>{result.model.version}</dd></div><div><dt>Weights hash</dt><dd className="mono">{result.model.weightsHash}</dd></div><div><dt>Execution</dt><dd>{result.execution.provider} · inference {result.execution.inferenceMs} ms · total {result.execution.totalMs} ms</dd></div><div><dt>Budget repair</dt><dd>{result.repair.budgetScaled ? 'Scaled' : 'Not scaled'} · multiplier {result.repair.multiplier} · dropped {result.repair.droppedLegIds.join(', ') || 'none'}</dd></div><div><dt>Evaluator</dt><dd>{result.valuation.schemaVersion} · {result.valuation.valuationHash}</dd></div></dl>

@@ -59,9 +59,6 @@ export function HedgeApp() {
   };
   const choose = (id: PresetId) => { setDraft(presets[id].text); setNotice(null); };
   const tryBitcoin = () => { setDraft(presets.crypto.text); openPreview('crypto'); };
-  const mode = view.kind === 'live' ? 'Live intake · Jev + cached catalogue · unconfirmed draft'
-    : view.kind === 'preview' ? 'Weather illustration · fictional markets · exact evaluator'
-    : 'Experimental BTC model · synthetic markets only · no trades';
 
   return (
     <>
@@ -72,17 +69,16 @@ export function HedgeApp() {
         </button>
         <div className="sim"><span className="dot" /> Simulation<span className="desktop-only"> — no trades placed</span></div>
       </header>
-      <div className="prototype">{mode}</div>
       <main id="main" ref={main} tabIndex={-1}>
         {view.kind === 'describe' && <><Composer draft={draft} notice={notice} busy={false} onDraft={setDraft} onChoose={choose} onSubmit={submit} />
-          <div className="intro-foot"><button className="btn quiet" onClick={() => setView({ kind: 'neural', preset: false, session: ++session.current })}>Enter BTC simulation manually · no Jev needed</button></div></>}
-        {view.kind === 'neural' && <NeuralWorkspace key={view.session} initial={view.preset ? { units: '0.2', referencePriceUsd: '70000', budgetUsd: DEFAULT_BUDGET_USD } : {}} onEdit={edit} />}
+          <div className="intro-foot"><button className="text-btn" onClick={() => setView({ kind: 'neural', preset: false, session: ++session.current })}>Enter BTC amounts manually</button></div></>}
+        {view.kind === 'neural' && <NeuralWorkspace key={view.session} initial={view.preset ? { units: '0.2', referencePriceUsd: '70000', budgetUsd: DEFAULT_BUDGET_USD } : {}} autoRun={view.preset} onEdit={edit} />}
         {view.kind === 'preview' && <PreviewWorkspace key={view.session} example={view.example} initialBudget={DEFAULT_BUDGET_USD} onEdit={edit} />}
         {view.kind === 'nomatch' && <NoMatch text={draft.trim()} onEdit={edit} onTryBitcoin={tryBitcoin} />}
         {view.kind === 'live' && live && <LiveWorkspace text={view.text} state={live} onEdit={edit}
           onRetry={() => void runLive(view.text)} onTryExample={() => { setDraft(presets.crypto.text); setView({ kind: 'describe' }); }} />}
       </main>
-      <footer><span>HedgeNet / Risk, made visible.</span><span>Research prototype. Not financial advice or insurance. No trades, wallets or payments.</span></footer>
+      <footer><span>HedgeNet / Risk, made visible.</span><span>Research demo. Not financial advice. No trades.</span></footer>
     </>
   );
 }

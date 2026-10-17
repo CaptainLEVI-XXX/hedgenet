@@ -15,14 +15,17 @@ export function useReducedMotion(): boolean {
 
 /**
  * Single animation clock for the explanatory illustration. Presentation time only:
- * it never gates financial results. Stops on page hide and unmount; never loops.
+ * it never gates financial results. Stops on page hide and unmount. Optional
+ * looping repeats a measured trace; it does not run inference or training.
  */
-export function useReplay(reducedMotion: boolean) {
+export function useReplay(reducedMotion: boolean, loop = false) {
   const [progress, setProgress] = useState(0);
   const [playing, setPlaying] = useState(false);
   const state = useRef({ p: 0, duration: 8000, last: 0, raf: 0 });
   const reducedRef = useRef(reducedMotion);
   reducedRef.current = reducedMotion;
+  const loopRef = useRef(loop);
+  loopRef.current = loop;
 
   const stop = useCallback(() => {
     cancelAnimationFrame(state.current.raf);
@@ -32,7 +35,10 @@ export function useReplay(reducedMotion: boolean) {
 
   const tick = useCallback((time: number) => {
     const s = state.current;
-    if (s.last) s.p = Math.min(1, s.p + (time - s.last) / s.duration);
+    if (s.last) {
+      const next = s.p + (time - s.last) / s.duration;
+      s.p = loopRef.current ? next % 1 : Math.min(1, next);
+    }
     s.last = time;
     setProgress(s.p);
     if (s.p >= 1) { s.raf = 0; s.last = 0; setPlaying(false); return; }

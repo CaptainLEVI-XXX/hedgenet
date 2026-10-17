@@ -68,7 +68,9 @@ weights. Never upload the repository root or add credentials to the bundle.
 The generated Dockerfile serves the full Next app. Configure server-side
 `HEDGENET_MODEL_URL` (HTTPS), `HEDGENET_MODEL_TOKEN`, `HEDGENET_PUBLIC_ORIGIN`
 (exact HTTPS origin, no trailing slash), `HEDGENET_DEMO_PASSWORD`, and
-`JEV_API_KEY`. Basic-auth username is `demo`. Paid API attempts are capped at
+`JEV_API_KEY`. Basic-auth username is `demo`. To intentionally open the demo to
+everyone, set `HEDGENET_PUBLIC_DEMO=true`; a valid public HTTPS origin is still
+required, and the model's bearer token remains mandatory. Paid API attempts are capped at
 10/minute and 100/day per process; use one replica. Counters reset on restart.
 `/api/health` is public and checks web readiness, not model availability.
 
@@ -85,7 +87,7 @@ bearer token, not its bind address, protects inference. Model health is public.
 The launcher supplies explicit sandbox runtime configuration; arbitrary
 HTTP model endpoints remain forbidden. Supply the same secret variables except
 the model URL, which the launcher sets. No training or Codex session is started.
-Keep the environment file outside the bundle and every service authenticated.
+Keep the environment file outside the bundle. Never disable model authentication.
 Hosted serving stays resident rather than pausing after each request;
 it can incur compute charges. Catalogue data is a snapshot, not an automatic
 refresh service. Build success is not proof of a working public deployment.

@@ -22,6 +22,11 @@ function publicOrigin(): string | null {
 
 export function assertDemoAccess(request: Request) {
   const origin = publicOrigin();
+  // Explicit opt-in opens the demo, not the separately authenticated model.
+  if (process.env.HEDGENET_PUBLIC_DEMO === 'true') {
+    if (!origin) throw new RequestRejected(503, 'access_not_configured', 'Public access is not configured.');
+    return;
+  }
   const password = process.env.HEDGENET_DEMO_PASSWORD;
   if (!origin && !password) return;
   if (!password) throw new RequestRejected(503, 'access_not_configured', 'Public access is not configured.');

@@ -5,12 +5,19 @@ import type { ChoiceQuestion, JevClient, JevResponse } from './jev.ts';
 
 type CatalogueIndex = ReturnType<typeof createCatalogueIndex>;
 type SearchResult = ReturnType<CatalogueIndex['search']>;
+
+/** Only provider slugs from real catalogue generations may become external links. */
+export function catalogueEventUrl(slug: string, dataMode: SearchResult['dataMode']): string | null {
+  if ((dataMode !== 'live' && dataMode !== 'recorded') || !/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/.test(slug)) return null;
+  return `https://polymarket.com/event/${encodeURIComponent(slug)}`;
+}
+
 type Discovery = {
   status: 'skipped' | 'suggestions' | 'no_discovery_match' | 'no_semantic_suggestion'
     | 'unsupported_structure' | 'catalogue_expired' | 'dependency_unavailable';
   catalogue: Omit<SearchResult, 'items'> | null;
   consideredEventIds: string[];
-  suggestions: Array<{ eventId: string; title: string; reviewStatus: 'needs_rule_review'; relevance: number }>;
+  suggestions: Array<{ eventId: string; title: string; url: string | null; reviewStatus: 'needs_rule_review'; relevance: number }>;
   provider: JevResponse | null;
   failure: JevError['code'] | null;
 };
@@ -60,6 +67,7 @@ export async function intakeExposure(input: unknown, options: { catalogue: Catal
           discovery.suggestions = shortlist.flatMap((event, index) => {
             const answer = discovery.provider!.answers[`candidate_${index}`]!;
             return suggestedChoice(answer) === 'match' ? [{ eventId: event.eventId, title: event.title,
+              url: catalogueEventUrl(event.slug, metadata.dataMode),
               reviewStatus: 'needs_rule_review' as const, relevance: answer.probabilities.match! }] : [];
           }).sort((a, b) => b.relevance - a.relevance).slice(0, 3);
           discovery.status = discovery.suggestions.length ? 'suggestions' : 'no_semantic_suggestion';

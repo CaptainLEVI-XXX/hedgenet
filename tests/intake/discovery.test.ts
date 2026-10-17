@@ -3,11 +3,21 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createCatalogueIndex } from '@hedgenet/venue';
 import { gammaPageSchema } from '../../packages/venue/src/catalogue.ts';
 import { createJevClient, intakeExposure } from '../../packages/intake/src/index.ts';
+import { catalogueEventUrl } from '../../packages/intake/src/discovery.ts';
+
+it('links only safe authoritative catalogue slugs, never synthetic or unsafe values', () => {
+  expect(catalogueEventUrl('bitcoin-price-october-17', 'live')).toBe('https://polymarket.com/event/bitcoin-price-october-17');
+  expect(catalogueEventUrl('bitcoin-price', 'recorded')).toBe('https://polymarket.com/event/bitcoin-price');
+  expect(catalogueEventUrl('bitcoin-price', 'synthetic')).toBeNull();
+  for (const slug of ['', ' ', '../bitcoin', 'https://evil.test', 'bitcoin?x=1', 'bitcoin#x', '%2f', '.', ' bitcoin']) {
+    expect(catalogueEventUrl(slug, 'live')).toBeNull();
+  }
+});
 
 afterEach(() => vi.useRealTimers());
-function index(marketCount = 1, title = 'Rainfall in London?', startedAt = new Date().toISOString(), extra: unknown[] = []) {
+function index(marketCount = 1, title = 'Rainfall in London?', startedAt = new Date().toISOString(), extra: unknown[] = [], dataMode: 'synthetic' | 'recorded' = 'synthetic') {
   const events = gammaPageSchema.parse({ events: [...Array.from({ length: 7 }, (_, i) => ({
-    id: String(i + 1), title: `${title} ${i + 1}`, active: true, closed: false,
+    id: String(i + 1), title: `${title} ${i + 1}`, slug: `london-rainfall-${i + 1}`, active: true, closed: false,
     tags: [{ slug: 'unexpected-provider-tag', label: 'Unfamiliar' }],
     endDate: '2026-12-01T00:00:00Z',
     markets: Array.from({ length: marketCount }, (_, j) => ({ id: `${i + 1}${j + 1}`, question: title,
@@ -15,7 +25,7 @@ function index(marketCount = 1, title = 'Rainfall in London?', startedAt = new D
       version: 'v1', outcomes: '["Yes","No"]', clobTokenIds: '["100","101"]' })),
   })), ...extra] }).events;
   return createCatalogueIndex({ schemaVersion: 'catalogue-v1', parserVersion: 'gamma-discovery-v2',
-    generationId: randomUUID(), dataMode: 'synthetic', source: 'https://gamma-api.polymarket.com/events/keyset',
+    generationId: randomUUID(), dataMode, source: 'https://gamma-api.polymarket.com/events/keyset',
     coverage: 'completed-open-event-walk', startedAt, completedAt: startedAt, pages: 1, events });
 }
 const input = { text: 'Rainfall in London will cost me $5,000. Hedge budget $100.',
@@ -37,6 +47,7 @@ it('runs two bounded batches over cached candidates, retaining review status and
   const result = await intakeExposure(input, { catalogue: index(), client: createJevClient({ apiKey: 'synthetic', fetchImpl: provider() }) });
   expect(result.discovery.status).toBe('suggestions');
   expect(result.discovery.suggestions).toHaveLength(3);
+  expect(result.discovery.suggestions.every(item => item.url === null)).toBe(true);
   expect(result.discovery.consideredEventIds).toEqual(['1', '2', '3', '4', '5']);
   expect(result.discovery.suggestions[0]).toMatchObject({ eventId: '1', reviewStatus: 'needs_rule_review' });
   expect(result.draft.fields.fixedLossUsd?.value).toBe('5000');
@@ -52,6 +63,12 @@ it('keeps empty discovery, model non-match, oversized events and expired catalog
   expect((await intakeExposure(input, { catalogue: index(1, 'Rainfall', '2020-01-01T00:00:00Z'), client })).discovery.status).toBe('catalogue_expired');
   expect((await intakeExposure(input, { catalogue: index(), client: createJevClient({ apiKey: 'synthetic', fetchImpl: provider('mismatch') }) }))
     .discovery.status).toBe('no_semantic_suggestion');
+});
+
+it('uses authoritative event slugs rather than event IDs or Jev text for real suggestions', async () => {
+  const result = await intakeExposure(input, { catalogue: index(1, 'Rainfall', new Date().toISOString(), [], 'recorded'),
+    client: createJevClient({ apiKey: 'synthetic', fetchImpl: provider() }) });
+  expect(result.discovery.suggestions[0]).toMatchObject({ eventId: '1', url: 'https://polymarket.com/event/london-rainfall-1' });
 });
 
 it('preserves the useful draft when candidate judgments fail, rather than claiming no compatible market', async () => {

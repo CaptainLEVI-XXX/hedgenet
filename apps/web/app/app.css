@@ -40,9 +40,61 @@
 .hedge-bottom table td, .hedge-bottom table th { text-align:left; }
 .hedge-bottom h2 .tag { margin-left:8px; vertical-align:middle; }
 .player-row .btn:disabled { opacity:.5; }
+.workspace-heading-actions { display:flex; align-items:center; gap:18px; }
+.neural-workspace .hedge-sheet { overflow:hidden; background:white; border:1px solid var(--line); }
+.neural-form { padding:24px 28px; display:grid; grid-template-columns:1fr 340px; gap:24px 48px; border-bottom:1px solid var(--line); }
+.neural-fields { display:flex; gap:24px; margin-top:12px; }
+.neural-fields label { display:grid; gap:7px; font-size:11px; color:var(--muted); }
+.neural-fields input { width:160px; max-width:100%; border:0; border-bottom:1px solid #cdd5e4; border-radius:0; background:transparent; padding:7px 0; font-family:inherit; font-weight:500; line-height:1.2; font-size:24px; color:var(--ink); }
+.neural-exposure > .btn { margin-top:12px; }
+.neural-exposure > p { margin-top:8px; }
+.neural-budget .lab-budget { width:auto; min-width:0; }
+.neural-form > .error { grid-column:1/-1; }
+.neural-workspace .lab-stage { border:0; grid-template-columns:minmax(0,1fr) 370px; }
+.neural-workspace .lab-output { display:block; }
+.neural-workspace .lab-network-head .text-btn { font-size:12px; min-height:32px; }
+.neural-caption { display:flex; justify-content:space-between; gap:16px; font-size:11px; color:var(--muted); padding-top:12px; border-top:1px solid #e4e7ed; }
+.neural-awaiting { min-height:350px; display:flex; align-items:center; justify-content:center; gap:10px; color:var(--muted); font-size:14px; }
+.neural-metrics { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0 14px; }
+.neural-metrics span { display:block; font-size:11px; color:var(--muted); margin-bottom:5px; }
+.neural-metrics strong { font-size:23px; font-weight:500; letter-spacing:-.7px; font-variant-numeric:tabular-nums; }
+.neural-workspace .position-row { font-size:12px; gap:10px; }
+.neural-workspace .lab-output > p { margin-top:12px; }
+.neural-workspace .hedge-details { padding:16px 24px; font-size:12px; }
+.neural-workspace .hedge-details > p { margin:14px 0; }
+.neural-raw { max-height:420px; max-width:100%; overflow:auto; font-size:12px; }
+.provenance dd { overflow-wrap:anywhere; }
+.market-links { margin-top:26px; padding-top:18px; border-top:1px solid var(--line); }
+.market-links h3 { font-size:13px; font-weight:550; display:flex; justify-content:space-between; }
+.market-links > p { font-size:10px; color:var(--muted); margin:6px 0 12px; }
+.market-links a { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; line-height:1.5; color:#294eac; text-decoration:none; padding:9px 0; border-bottom:1px solid #edf0f5; }
+.market-links a:hover { color:var(--blue); text-decoration:underline; }
+.market-links a span { flex-shrink:0; }
+.empty-result { color:var(--muted); line-height:1.7; }
+.intake-pending,.intake-empty { max-width:780px; margin:64px auto; }
+.intake-pending h1,.intake-empty h1 { font-size:28px; letter-spacing:-.6px; margin:18px 0; }
+.intake-pending > .spinner { display:block; width:24px; height:24px; }
+.intake-pending p,.intake-empty p { font-size:15px; color:var(--muted); line-height:1.7; }
+.intake-details { margin-top:20px; font-size:12px; }
+@media(max-width:1000px) {
+  .neural-workspace .lab-stage { grid-template-columns:1fr; }
+  .neural-form { grid-template-columns:1fr 300px; gap:24px; }
+  .neural-workspace .lab-output { padding:24px; }
+}
 @media(max-width:700px) {
   .stale-banner { padding:10px 16px; }
   .budget-precise input { width:120px; }
   .missing-list { columns:1; }
   .exposure-context .tag { margin-left:0; }
+  .neural-form { padding:20px; grid-template-columns:1fr; gap:22px; }
+  .neural-fields { gap:16px; }
+  .neural-fields label { min-width:0; flex:1; }
+  .neural-fields input { width:100%; }
+  .workspace-heading-actions { gap:10px; }
+  .workspace-heading-actions .tag { display:none; }
+  .neural-caption { font-size:10px; }
+  .neural-workspace .lab-net-svg { min-width:580px; }
+  .neural-workspace .lab-svg-scroll { overflow-x:auto; }
+  .neural-workspace .lab-output { padding:20px; }
+  .intake-pending,.intake-empty { margin:30px 0; }
 }

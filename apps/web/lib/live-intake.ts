@@ -97,7 +97,7 @@ export async function runLiveIntake(input: { text: string; timezone: string }, d
           status: discovery.catalogue.status, ageMinutes: Math.round(discovery.catalogue.ageMs / 60_000) },
         consideredCount: discovery.consideredEventIds.length,
         suggestions: discovery.suggestions.map(item => ({ eventId: item.eventId, title: item.title,
-          relevance: Math.round(item.relevance * 100) / 100, reviewStatus: item.reviewStatus })),
+          url: item.url, relevance: Math.round(item.relevance * 100) / 100, reviewStatus: item.reviewStatus })),
       },
       model: { status: 'unavailable' as const, message: 'No accepted neural model exists yet, so no hedge can be proposed. Nothing was substituted.' },
       proposal: null,

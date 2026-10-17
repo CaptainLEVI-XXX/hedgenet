@@ -4,4 +4,4 @@ export { interpretExposure } from './draft.ts';
 export type { ExposureDraft, DraftField, SourceSpan } from './draft.ts';
 export { createRuleReview, confirmExposure, reviseBudget, assembleConfirmedValuation, ExposureSemanticsSchema } from './confirmation.ts';
 export type { RuleReview, ConfirmedExposure, ExposureSemantics } from './confirmation.ts';
-export { intakeExposure } from './discovery.ts';
+export { intakeExposure, catalogueEventUrl } from './discovery.ts';
