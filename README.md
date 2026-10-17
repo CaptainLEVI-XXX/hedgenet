@@ -29,9 +29,10 @@ or complete continuous numeric partitions, including boundary limits and tails.
 This establishes coverage under supplied normalized rules, not that those rules
 faithfully describe a live market or the user's exposure.
 
-There is **no live market integration, trained model, Codex training harness,
-Jev integration, or production website yet**. The included crypto/weather demo is
-synthetic; it makes no optimality or execution claim.
+Public market discovery now has a persisted categorized catalogue and local
+search. There is **no live quote/compatibility integration, trained model, Codex
+training harness, Jev integration, or production website yet**. The included
+crypto/weather financial demo is synthetic; it makes no execution claim.
 
 ## Run locally
 
@@ -57,6 +58,46 @@ The [packet format and safety limits](CONTRIBUTING.md#recorded-local-verificatio
 explain what is captured. This is a trusted local verification runner, not the
 planned Codex/CreateOS training controller. Private instructions, work packets
 and generated evidence stay out of Git.
+
+### Market catalogue
+
+```sh
+pnpm catalogue refresh
+pnpm catalogue search "BTC"
+pnpm catalogue search "London rain"
+```
+
+Refresh reads the public Gamma API without credentials and stores a gzip snapshot
+under ignored `.amp/in/catalogue/`. Search reads local data only; it does not crawl
+markets on the user path. `@hedgenet/venue` exports `refreshCatalogue`,
+`loadCatalogue`, and `createCatalogueIndex`; keep the returned index in memory and
+replace it only after a successful load/build. Search supports category filtering,
+BTC/ETH aliases and at most 20 parent-event candidates. Results are discovery
+matches, **not compatible hedges**. Unknown observation/source/protocol details
+remain unknown; event end dates are not observation dates. Closed/unavailable
+children cannot make an otherwise unavailable parent searchable.
+
+Descriptions are bounded 1,024-character excerpts, explicitly marked when
+truncated; a market's description hash covers the original text. Parents with
+more than eight children retain counts, categories and title but no child-detail
+subset (`structureStatus: too_many_markets`). They remain discoverable, not
+silently reduced to eight buckets or declared semantically incompatible. Full
+selected rules and identities must be fetched before financial use.
+
+Refresh has a single-writer lock, 100-event pages, a 500-page invocation limit,
+30-second request deadlines and a 120-second crawl-request budget. On failure or
+limit exhaustion, rerun to resume persisted pages. Only a completed cursor walk
+replaces last-good data; this is not a frozen point-in-time provider snapshot.
+Checkpoints older than 24 hours restart. Searches report age from crawl start:
+over 30 minutes is degraded, over 24 hours is expired with no candidates.
+Missing/corrupt storage throws instead of masquerading as no market matches.
+
+The CLI is one-shot, not an installed periodic worker. Future hosting must provide
+the 10-minute refresh schedule, durable storage and backup explicitly. Atomic
+rename protects readers from partial files, not disk loss. After a hard crash,
+inspect `refresh.lock` and confirm its process is gone before removing the lock;
+do not remove a live writer's lock. Synthetic/recorded sources require an explicit
+fetch adapter and cannot resume live checkpoints.
 
 ## Intended architecture
 

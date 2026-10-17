@@ -10,10 +10,12 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "demo:foundation": "node examples/financial-foundation.ts",
+    "catalogue": "node tools/catalogue.ts",
     "lab:check": "node tools/lab.mjs"
   },
   "dependencies": {
-    "@hedgenet/core": "workspace:*"
+    "@hedgenet/core": "workspace:*",
+    "@hedgenet/venue": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
