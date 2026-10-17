@@ -245,7 +245,10 @@ authoritative evaluator or final test labels. No code generation or training
 happens per user request.
 
 CreateOS compute, Codex subscription allowance, and Jev API usage are separate.
-Subscription authentication inside the sandbox has not been verified yet.
+Codex CLI 0.160.0 successfully completed device login inside the sandbox and
+reported `Logged in using ChatGPT`. No OpenAI API key was used. This verifies
+authentication, not available subscription quota or a successful coding/model
+request. The sandbox was paused afterward; training has not started.
 
 ## Core contracts
 
