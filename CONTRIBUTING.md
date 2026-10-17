@@ -81,6 +81,49 @@ Keep training reproducible: record seeds, data provenance, model versions, and
 evaluation results. Do not commit private datasets or large generated checkpoints
 without agreeing on their storage and distribution first.
 
+## Recorded local verification
+
+For consequential work, record the question, prediction, counterexample, baseline
+and fixed assumptions before checking the candidate. The optional local runner
+captures tests → typecheck → synthetic demo with source hashes, a pre-run source
+copy, bounded output and actual exit statuses. It needs Node 24 and macOS/Linux.
+
+Save a packet such as this to an ignored path, e.g. `docs/lab/check.json`:
+
+```json
+{
+  "schemaVersion": "lab-packet-v1",
+  "id": "foundation-check",
+  "mode": "evaluate",
+  "question": "Does this candidate preserve the financial foundation?",
+  "prediction": "All existing checks pass without source changes.",
+  "disconfirmingEvidence": "A financial regression, incomplete check or source drift.",
+  "requirements": ["Existing core tests and synthetic demo remain valid."],
+  "assumptions": ["Trusted local code; synthetic data; installed locked dependencies."],
+  "baseline": "The same three commands run directly on the same candidate.",
+  "evidence": ["tests/core/", "tests/fixtures/exposures.ts"],
+  "suite": "foundation",
+  "budgetSeconds": 180
+}
+```
+
+Run `pnpm lab:check docs/lab/check.json`. Only the `foundation` suite is supported;
+packets cannot supply commands. Budget must be an integer from 1 to 180 seconds.
+Inspect the printed `.amp/in/artifacts/lab/` result path and logs. Later checks
+are skipped after failure; interruption/timeouts never count as passed. Correcting
+a candidate creates a new run rather than replacing the failed evidence.
+
+This is **trusted local execution, not a sandbox**. The child can read local files
+and use the network. Do not run untrusted generated training code through it.
+Environment variables are allowlisted and credential filenames are excluded from
+snapshots, but arbitrary secrets in source/packets/logs are not automatically
+redacted. Review before sharing. Source snapshots exclude installed dependencies,
+private docs and source roots not listed in `tools/lab.mjs`.
+
+`checks_passed` is not independent model evaluation, acceptance or release. Record
+the hypothesis decision and limitations separately. Model training, held-out
+financial grading and promotion still require their own controller and controls.
+
 ## Before committing or pushing
 
 Review the exact files and content, not just whether tests pass:

@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "demo:foundation": "node examples/financial-foundation.ts"
+    "demo:foundation": "node examples/financial-foundation.ts",
+    "lab:check": "node tools/lab.mjs"
   },
   "dependencies": {
     "@hedgenet/core": "workspace:*"

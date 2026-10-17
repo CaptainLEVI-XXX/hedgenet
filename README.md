@@ -43,6 +43,12 @@ older, you can run the checks without changing the system installation:
 npx --yes --package=node@24 --package=pnpm@12.4.2 --call 'pnpm install --frozen-lockfile && pnpm test && pnpm typecheck && pnpm demo:foundation'
 ```
 
+For reproducible local check records, use `pnpm lab:check <local-packet.json>`.
+The [packet format and safety limits](CONTRIBUTING.md#recorded-local-verification)
+explain what is captured. This is a trusted local verification runner, not the
+planned Codex/CreateOS training controller. Private instructions, work packets
+and generated evidence stay out of Git.
+
 ## Intended architecture
 
 **User requests:** Jev interprets exposure → the backend selects compatible
