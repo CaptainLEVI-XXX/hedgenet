@@ -24,6 +24,11 @@ It does not select positions or establish market compatibility, complete scenari
 coverage, quote freshness or model eligibility. Those checks remain necessary
 before any proposal can be recommended.
 
+The scenario builder now derives losses and payouts for matching binary conditions
+or complete continuous numeric partitions, including boundary limits and tails.
+This establishes coverage under supplied normalized rules, not that those rules
+faithfully describe a live market or the user's exposure.
+
 There is **no live market integration, trained model, Codex training harness,
 Jev integration, or production website yet**. The included crypto/weather demo is
 synthetic; it makes no optimality or execution claim.
@@ -71,8 +76,8 @@ Subscription authentication inside the sandbox has not been verified yet.
 ## Core contracts
 
 `@hedgenet/core` exports `LossTemplateSchema`, `ObservationSchema`, `lossAt`, and
-`summarizeScenarioLosses`, plus `createValuationProblem` and `evaluatePositions`.
-It also exports their template/observation and valuation/proposal input types.
+`summarizeScenarioLosses`, `buildScenarios`, `createValuationProblem` and
+`evaluatePositions`, with the associated input and scenario-location types.
 Schemas reject unknown fields/versions and do not coerce strings into booleans
 or numbers into monetary values.
 
@@ -83,6 +88,36 @@ digits to preserve exact scalar products. Out-of-bound values reject; they are
 not rounded silently. This representation limit does not establish a model's
 supported financial range. Only explicitly supplied scenarios are scored;
 completeness of a real market's state space remains a separate requirement.
+
+### Scenario construction
+
+`buildScenarios(loss, settlement)` consumes a loss template and strict
+`settlement-v1` rules. A `binary` settlement must match a conditional loss's exact
+`conditionId`. A `numeric_partition` requires `domain: continuous` and 3–8 buckets
+with unique `marketId`, `yesLegId`, `noLegId`, and `lower`/`upper` bounds. Each bound
+is `{ value, inclusive }`, or `null` for an infinite end. Asset partitions cover
+[0, +∞); threshold partitions cover the whole real line. Gaps, overlaps, missing
+tails, duplicate identities and unsupported measurement domains reject.
+
+The `scenarios-v1` result retains parsed loss/settlement, states with locations and
+losses, and YES/NO payouts keyed by state ID. Buckets are sorted canonically;
+states follow position order within each bucket. A boundary belongs to exactly
+one bucket; its opposite one-sided limit retains the neighboring payout. Singleton
+outcomes are preserved. No floating epsilon or finite chart range defines risk.
+
+`numeric` locations have a `value` and `side: at | below | above`; `tail` locations
+name a direction. `loss_cap` denotes the exact threshold ± cap/rate breakpoint
+using the returned loss template, without rounding a recurring fraction.
+All supported numeric losses are continuous and piecewise linear, so endpoints,
+limits and breakpoints capture every payoff region's extrema. Worst loss includes
+the supremum where an open endpoint is not attained. At most 18 numeric states
+are produced under these limits; they fit the evaluator's 32-state maximum.
+
+Pass `{ stateId, originalLossUsd }` from generated states to the valuation problem
+and join generated legs to trusted books/fees **by leg ID**. The scenario builder
+does not verify observation time, source, location, rule provenance or void/dispute
+outcomes. Discrete/rounded measurement semantics need their own explicit support.
+These results are not proof of live hedge eligibility.
 
 ### Position valuation
 

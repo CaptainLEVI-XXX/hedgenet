@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createValuationProblem, evaluatePositions, lossAt, summarizeScenarioLosses } from '@hedgenet/core';
+import { buildScenarios, createValuationProblem, evaluatePositions, lossAt, summarizeScenarioLosses } from '@hedgenet/core';
 import { exposureFixtures } from '../tests/fixtures/exposures.ts';
 
 console.log('HedgeNet — synthetic financial foundation demo');
@@ -69,3 +69,27 @@ for (const example of [
   console.log(`Worst modeled loss: $${quote.worstOriginalLossUsd} → $${quote.worstNetLossUsd}`);
 }
 console.log('Same evaluator, different exposures. No real settlement/freshness checks, optimality claim or trade recommendation.');
+
+const generated = buildScenarios(rain.template, {
+  schemaVersion: 'settlement-v1', kind: 'binary', conditionId: rain.template.conditionId,
+  marketId: 'synthetic:rain', yesLegId: 'synthetic:rain:yes', noLegId: 'synthetic:rain:no',
+});
+const rainProblem = createValuationProblem({
+  schemaVersion: 'valuation-v1', currency: 'USD', dataMode: 'synthetic',
+  snapshotId: 'synthetic:rain-book', rulesHash: 'b'.repeat(64), budgetUsd: '1000',
+  states: generated.states.map(({ stateId, originalLossUsd }) => ({ stateId, originalLossUsd })),
+  legs: generated.legs.map(leg => ({ ...leg, minShares: '5', fee: { kind: 'none' },
+    asks: [{ price: leg.legId === 'synthetic:rain:yes' ? '0.3' : '0.7', size: '5000' }],
+  })),
+});
+const rainQuote = evaluatePositions(rainProblem, {
+  schemaVersion: 'positions-v1', valuationHash: rainProblem.contentHash,
+  positions: generated.legs.map(leg => ({ legId: leg.legId,
+    shares: leg.legId === 'synthetic:rain:yes' ? '3000' : '0' })),
+});
+assert.equal(rainQuote.totalCostUsd, '900');
+assert.equal(rainQuote.worstNetLossUsd, '2900');
+assert.deepEqual(rainQuote.scenarios.map(state => state.netLossUsd), ['900', '2900']);
+console.log('\nSynthetic rain: normalized condition → generated states/payouts → independent position valuation.');
+console.table(rainQuote.scenarios);
+console.log('Normal resolution only; the synthetic rule is stipulated, not fetched or semantically verified.');
