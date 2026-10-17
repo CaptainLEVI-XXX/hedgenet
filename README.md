@@ -30,8 +30,9 @@ This establishes coverage under supplied normalized rules, not that those rules
 faithfully describe a live market or the user's exposure.
 
 Public market discovery now has a persisted categorized catalogue and local
-search. There is **no live quote/compatibility integration, trained model, Codex
-training harness, Jev integration, or production website yet**. The included
+search. Selected CTF order books can also be read and checked for identity,
+precision and freshness. There is **no complete live hedge flow, trained model,
+Codex training harness, Jev integration, or production website yet**. The included
 crypto/weather financial demo is synthetic; it makes no execution claim.
 
 ## Run locally
@@ -98,6 +99,27 @@ rename protects readers from partial files, not disk loss. After a hard crash,
 inspect `refresh.lock` and confirm its process is gone before removing the lock;
 do not remove a live writer's lock. Synthetic/recorded sources require an explicit
 fetch adapter and cannot resume live checkpoints.
+
+### Selected order books
+
+`fetchBookSnapshot(legs, { dataMode: 'live' })` reads one public batch for 1–16
+trusted `{ legId, protocol: 'ctf', assetId, conditionId }` selections. Protocol v2
+is explicitly unsupported at this boundary. Identity checks reject missing,
+duplicate, unexpected or wrong-condition books; response order does not matter.
+Empty asks mean zero depth, whereas a missing book is an error.
+
+Snapshots retain raw responses, exact normalized decimal strings, order minimums,
+ticks, venue timestamps/hashes and host fetch times. Asks sort ascending; bids
+sort descending. The adapter does **not** apply the evaluator's 90% depth reserve
+or infer fees. Financial fields outside the supported 12+12-digit range fail
+rather than round; string spelling such as `"0.200"` normalizes to `"0.2"`.
+
+Call `assertBooksFresh(snapshot)` again when producing a result. It checks the
+content hash, at most five seconds of fetch span and at most 30 seconds since
+fetch start. A venue timestamp is its update time, not our retrieval time. Hashes
+detect drift, not authenticity: the server must own the trusted snapshot. Public
+reads were exercised, but fees, full rules, event revalidation and semantic
+compatibility are still required before recommending any positions.
 
 ## Intended architecture
 
