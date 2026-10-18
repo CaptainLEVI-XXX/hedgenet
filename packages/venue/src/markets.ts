@@ -15,6 +15,8 @@ const id = z.string().max(80).regex(/^[1-9]\d*$/);
 const flag = z.boolean().nullish().transform(value => value ?? null);
 const text = z.string().nullish().transform(value => value ?? '');
 const optionalText = z.string().nullish().transform(value => value || null);
+const publishedSlug = z.string().nullish().transform(value => value ?? null);
+const validSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const decimal = z.string().max(25).regex(/^(?:0|[1-9]\d{0,11})(?:\.\d{1,12})?$/)
   .transform(value => value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value);
 const optionalDecimal = z.unknown().optional().transform(value => {
@@ -28,7 +30,7 @@ const encodedArray = z.unknown().optional().transform(value => {
   } catch { return null; }
 });
 const rawMarket = z.object({
-  id, question: text, description: text, resolutionSource: optionalText, endDate: optionalText,
+  id, slug: publishedSlug, question: text, description: text, resolutionSource: optionalText, endDate: optionalText,
   conditionId: optionalText, questionID: optionalText, groupItemTitle: text, groupItemThreshold: optionalText,
   version: optionalText, outcomes: encodedArray, clobTokenIds: encodedArray, positionIds: encodedArray,
   active: flag, closed: flag, archived: flag, acceptingOrders: flag, enableOrderBook: flag,
@@ -37,7 +39,7 @@ const rawMarket = z.object({
   feesEnabled: flag, feeSchedule: z.unknown().optional(),
 });
 const rawEvent = z.object({
-  id, title: z.string().min(1), description: text, resolutionSource: optionalText, endDate: optionalText,
+  id, slug: publishedSlug, title: z.string().min(1), description: text, resolutionSource: optionalText, endDate: optionalText,
   active: flag, closed: flag, archived: flag, negRisk: flag, negRiskAugmented: flag,
   negRiskMarketID: optionalText, markets: z.array(rawMarket).min(1),
 });
@@ -98,7 +100,7 @@ export async function fetchEventRules(eventId: string, options: ReadOptions) {
 }
 export type EventRules = Awaited<ReturnType<typeof fetchEventRules>>;
 type SelectedLeg = { marketId: string; side: 'YES' | 'NO'; legId: string; protocol: 'ctf';
-  assetId: string; conditionId: string; fee: Fee };
+  assetId: string; conditionId: string; fee: Fee; question: string; url: string | null };
 export type MarketSnapshot = { schemaVersion: 'market-snapshot-v1'; snapshotId: string;
   reviewStatus: 'needs_semantic_review'; event: EventRules; legs: SelectedLeg[]; books: BookSnapshot; contentHash: string };
 
@@ -141,10 +143,18 @@ export async function fetchMarketSnapshot(input: unknown, options: ReadOptions):
     if (market.orderMinSize === null || market.orderPriceMinTickSize === null || market.negRisk === null) {
       throw new MarketSnapshotError('constraints_changed', 'Selected trading constraints are unknown');
     }
+    // Published display metadata is not resolution material. Never infer a slug from text.
+    let url: string | null = null;
+    if ((event.dataMode === 'live' || event.dataMode === 'recorded')
+      && event.slug !== null && validSlug.test(event.slug)) {
+      const eventUrl = `https://polymarket.com/event/${event.slug}`;
+      if (market.slug === null) url = eventUrl;
+      else if (validSlug.test(market.slug)) url = `${eventUrl}/${market.slug}`;
+    }
     for (const side of ['YES', 'NO'] as const) {
       const assetId = market.clobTokenIds[market.outcomes.findIndex(label => label.toUpperCase() === side)]!;
       legs.push({ marketId, side, protocol: 'ctf', conditionId: market.conditionId!, assetId,
-        legId: `polymarket:ctf:${marketId}:${side.toLowerCase()}`, fee: market.fee });
+        legId: `polymarket:ctf:${marketId}:${side.toLowerCase()}`, fee: market.fee, question: market.question, url });
     }
   }
   const books = await fetchBookSnapshot(legs.map(({ legId, protocol, assetId, conditionId }) =>

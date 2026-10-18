@@ -18,6 +18,64 @@ function provider(value: unknown, books: unknown[] = [book('102'), book('101')])
 }
 const options = (value: unknown, books?: unknown[]) => ({ dataMode: 'synthetic' as const, fetchImpl: provider(value, books) });
 
+it.each(['live', 'recorded'] as const)('joins published display metadata by exact market identity in %s snapshots', async dataMode => {
+  const data = { ...event(), slug: 'weather-event', markets: [
+    { ...market(), slug: 'rain-market' },
+    { ...market(), id: '12', question: 'Other condition?', slug: 'other-market',
+      outcomes: '["Yes","No"]', clobTokenIds: '["201","202"]' },
+  ] };
+  const opts = { dataMode, fetchImpl: provider(data, [book('202'), book('101'), book('201'), book('102')]) };
+  const rules = await fetchEventRules('1', opts);
+  expect(rules.slug).toBe('weather-event');
+  expect(rules.markets.map(m => m.slug)).toEqual(['rain-market', 'other-market']);
+  const snapshot = await fetchMarketSnapshot({ eventId: '1', expectedRulesHash: rules.rulesHash, marketIds: ['12', '11'] }, opts);
+  expect(snapshot.legs.map(leg => [leg.marketId, leg.side, leg.assetId, leg.question, leg.url])).toEqual([
+    ['11', 'YES', '101', 'Synthetic rain?', 'https://polymarket.com/event/weather-event/rain-market'],
+    ['11', 'NO', '102', 'Synthetic rain?', 'https://polymarket.com/event/weather-event/rain-market'],
+    ['12', 'YES', '201', 'Other condition?', 'https://polymarket.com/event/weather-event/other-market'],
+    ['12', 'NO', '202', 'Other condition?', 'https://polymarket.com/event/weather-event/other-market'],
+  ]);
+  const changed = structuredClone(snapshot);
+  changed.legs[0]!.url = 'https://polymarket.com/event/other';
+  expect(() => assertMarketSnapshotFresh(changed)).toThrow(/hash/i);
+  const changedSlug = structuredClone(snapshot);
+  changedSlug.event.markets[0]!.slug = 'changed';
+  expect(() => assertMarketSnapshotFresh(changedSlug)).toThrow(/hash/i);
+});
+
+it('uses only valid published slugs, with event fallback only for an absent market slug', async () => {
+  for (const [dataMode, eventSlug, marketSlug, expected] of [
+    ['recorded', 'weather-event', undefined, 'https://polymarket.com/event/weather-event'],
+    ['recorded', 'weather-event', null, 'https://polymarket.com/event/weather-event'],
+    ['synthetic', 'weather-event', 'rain-market', null],
+    ['recorded', undefined, 'rain-market', null],
+    ['recorded', null, 'rain-market', null],
+    ['recorded', '../weather', 'rain-market', null],
+    ['recorded', 'weather-event', '../rain', null],
+    ['recorded', 'weather-event', 'rain?redirect=other', null],
+    ['recorded', 'weather-event', '', null],
+  ] as const) {
+    const data = { ...event(), slug: eventSlug, markets: [{ ...market(), slug: marketSlug }] };
+    const opts = { dataMode, fetchImpl: provider(data) };
+    const rules = await fetchEventRules('1', opts);
+    expect(rules.slug).toBe(eventSlug ?? null);
+    expect(rules.markets[0]!.slug).toBe(marketSlug ?? null);
+    const snapshot = await fetchMarketSnapshot({ eventId: '1', expectedRulesHash: rules.rulesHash, marketIds: ['11'] }, opts);
+    expect(snapshot.legs.map(leg => leg.url)).toEqual([expected, expected]);
+  }
+});
+
+it('keeps published slug changes out of the resolution confirmation hash', async () => {
+  const original = await fetchEventRules('1', options(event()));
+  const data = { ...event(), slug: 'published-event', markets: [{ ...market(), slug: 'published-market' }] };
+  const changed = await fetchEventRules('1', options(data));
+  expect(changed.slug).toBe('published-event');
+  expect(changed.rulesHash).toBe(original.rulesHash);
+  const opts = { dataMode: 'recorded' as const, fetchImpl: provider(data) };
+  const snapshot = await fetchMarketSnapshot({ eventId: '1', expectedRulesHash: original.rulesHash, marketIds: ['11'] }, opts);
+  expect(snapshot.legs[0]!.url).toBe('https://polymarket.com/event/published-event/published-market');
+});
+
 it('binds full rules, reversed YES/NO identities and exact fees to independently valued positions', async () => {
   const data = event(), opts = options(data);
   const rules = await fetchEventRules('1', opts);
