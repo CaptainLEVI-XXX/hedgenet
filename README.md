@@ -1,55 +1,153 @@
 # HedgeNet
 
-Turn a description of financial risk into a neural hedge simulation—and look inside the network that sizes it.
+**Describe your downside. Explore a neural hedge simulation—and see the risk that remains.**
 
-## How It Works
+HedgeNet makes position sizing inspectable: set a budget, compare proposed
+positions and all-in cost, then look inside the network that produced them.
+Built for the **CreateOS × Stripe Projects hackathon**.
 
-Say you hold Bitcoin and want to soften a price drop:
+[**Try the hosted demo →**](https://01m55gps20t94024xvf546rg91-3000.app.sb.createos.sh)
+· [Engineering reference](ENGINEERING.md)
+· [Stripe Projects stack](https://projects.dev/s#v1:createos~project)
 
-> I hold 0.2 BTC. I want protection if Bitcoin falls below $70,000 on October 30, 2026. My hedge budget is $1,000.
+[![HedgeNet showing measured neural activations, a synthetic hedge, and remaining loss](assets/hedgenet-demo.png)](https://01m55gps20t94024xvf546rg91-3000.app.sb.createos.sh)
 
-[Jev](https://typesafe.ai/) interprets the exposure in your words. A small trained
-neural network takes the structured inputs and synthetic market data, then
-proposes how many YES/NO shares to hold. Deterministic financial code checks the
-budget, available depth, and payouts across the modeled scenarios:
+## Try it
+
+1. Open the demo and choose **A drop in Bitcoin**.
+2. Click **Build my demo hedge** to run the trained model on the synthetic fixture.
+3. Move the budget slider to compare positions, cost, and remaining modeled loss.
+4. Pause the neural replay to inspect measured activations, or open
+   **Details & assumptions** for scenarios and model provenance.
+
+The preset goes straight to numerical inference; it does not need Jev. If the
+page reports that the sandbox is waking up, wait a moment and refresh.
+
+**Demo scope:** the model serves a fixed synthetic BTC universe for **30 October
+2026**, with fictional $60k/$80k settlement buckets and synthetic books. Cached
+real Polymarket links are discovery references, not the simulated positions or
+live hedge recommendations. Weather is illustrative. This is experimental
+research, not financial advice: no trades, wallets, payments, or online training.
+
+## Start with the risk, not an order ticket
+
+An example description:
+
+> I hold 0.2 BTC. I want protection if Bitcoin falls below $70,000 on October 30,
+> 2026. My hedge budget is $1,000.
+
+[Jev](https://typesafe.ai/) interprets custom descriptions into an exposure draft
+and helps discover related events in a cached Polymarket catalogue. Discovery
+helps you investigate the risk; it does not establish settlement compatibility
+or automatically turn arbitrary text into a neural hedge.
+
+Custom intake keeps your original description and requested date visible. It
+does not replace them with the BTC example. Choose the separate demo explicitly
+to explore neural position sizing with fictional markets.
+
+## What you get
+
+| Capability | Why it matters |
+| --- | --- |
+| **Plain-language intake** | Jev structures your concern and surfaces related cached market links for investigation. |
+| **Budget-sensitive BTC simulation** | A trained neural model proposes quantities; changing the budget reruns inference. |
+| **Independent financial checks** | Deterministic code checks cost including fees, budget, depth, order minima, and scenario payoffs. |
+| **Residual-risk view** | Compare the unhedged baseline with remaining modeled loss instead of treating a basket as guaranteed protection. |
+| **An inspectable network** | See selected real inputs, learned weights, and measured activations from the completed forward pass. |
+| **A meaningful no-hedge result** | Non-improving proposals are withheld rather than dressed up as recommendations. |
+
+## How it works
+
+### Request path: interpretation, discovery, and explicit demo inference
+
+```text
++----------------------+     +-------------------+     +---------------------+
+| Custom description   | --> | Jev exposure draft| --> | Cached Polymarket   |
+| Original risk + date |     | + interpretation  |     | discovery links     |
++----------------------+     +-------------------+     +---------------------+
+                                                        Not live positions
+
++----------------------+     +-------------------+     +---------------------+
+| Explicit BTC demo    | --> | Trained neural    | --> | Independent checks  |
+| Synthetic fixture   |     | quantity proposal |     | Cost, depth, losses |
++----------------------+     +-------------------+     +----------+----------+
+                                                                 |
+                                                                 v
+                                                      Positions + remaining
+                                                      loss + inference replay
+```
+
+The network uses **738 encoded inputs and 32 hidden units** to propose position
+sizes, not to forecast prices. The interface shows a selected subset of features,
+weights, and activations. Animated connections replay **measured inference**,
+not live training or invented progress.
+
+The financial evaluator uses canonical decimal strings and accounts for the
+full cost of protection:
 
 ```text
 Net loss = original loss + purchase cost including fees − payout
 ```
 
-You see the positions, what they cost, and the downside that remains. Move the
-budget slider and run the same model with a different constraint. If the basket
-doesn't improve worst-case loss, HedgeNet doesn't recommend it.
+It preserves signed scenario gains and compares worst modeled loss against the
+unhedged baseline. A proposal that fails constraints or does not improve risk
+does not become a recommendation. The offline solver never silently substitutes
+for the neural model on the request path.
 
-The interesting part is that you can look inside:
+### Training path: offline building, independent evaluation
 
-- **738 encoded features, 32 hidden units.** The visualization shows a slice of
-  the actual inputs, learned weights, and activations.
-- **Measured inference, replayed.** The flowing connections replay a completed
-  forward pass. Pause the animation to inspect the numbers.
-- **Separate building and checking.** Codex authored and ran training code in a
-  [CreateOS sandbox](https://createos.sh/products/sandbox); host-side financial
-  code evaluated its outputs independently. Training happens offline, not every
-  time someone asks for a hedge.
+```text
++----------------------+     +-----------------------+
+| Trusted optimizer    | --> | Codex-authored training|
+| Synthetic examples   |     | code inside CreateOS   |
++----------------------+     +-----------+-----------+
+                                        |
+                                        v
++----------------------+     +-----------------------+
+| Experimental         | <-- | Independent host-side |
+| checkpoint to serve  |     | financial evaluation  |
++----------------------+     +-----------------------+
+```
 
-The frontend, backend, and numerical model now run together in CreateOS.
-[Stripe Projects](https://projects.dev/s#v1:createos~project) provisioned the
-CreateOS project and Free plan; Jev and Codex were integrated separately.
+Codex authored and ran training code in a CreateOS sandbox. Candidate numerical
+outputs were checked outside the builder; generated candidate code did not run
+on the developer's machine. Training is separate from serving—no Codex session,
+code generation, or weight updates are needed for each demo request.
 
-## Play With It
+The served checkpoint is experimental, not evidence of general hedge quality.
+See [evaluation results and scope](ENGINEERING.md#prototype-scope-and-evaluation)
+for measured validation performance and unresolved held-out quality.
 
-**[Try HedgeNet live →](https://01m55gps20t94024xvf546rg91-3000.app.sb.createos.sh)**
+## CreateOS × Stripe Projects
 
-Choose **A drop in Bitcoin**, click **Build my demo hedge**, then move the budget
-slider. Or write your own BTC exposure for Jev to interpret. The preset bypasses
-Jev, so you can jump straight into the neural simulation. If the sandbox is
-waking up, give it a moment and refresh.
+[Stripe Projects](https://projects.dev/s#v1:createos~project) provisioned
+**`createos/project` and `createos/free` only**: the CreateOS project and Free
+plan. Jev and Codex were integrated separately; Stripe is not a payment or
+trading integration here.
 
-This is an experimental **synthetic BTC demo**, not live-market hedging or
-financial advice. The Polymarket links are for discovery, not the simulated
-positions. Weather is illustrative. No trades are placed.
+CreateOS supplied the sandbox for offline Codex training and hosts the deployed
+Next.js frontend, API routes, and authenticated numerical model runtime. The
+experimental numerical runtime uses
+[Handwired](https://github.com/chenglou/handwired); its MIT notice accompanies
+the deployed runtime.
 
-To explore locally with Node 24 and pnpm 12.4.2:
+## Where it is useful
+
+- **Explore a BTC downside scenario:** compare the budget/cost/risk trade-off
+  inside the fixed synthetic universe, without placing an order.
+- **Understand neural position sizing:** inspect real inference rather than
+  treating model output as an unexplained recommendation.
+- **Investigate related prediction markets:** use custom-text interpretation
+  and cached event links as a starting point for rule review, not proof of cover.
+
+The intended product connects a confirmed exposure to compatible markets, fresh
+books, neural sizing, and independent checks. That live-market chain is not
+complete. Actual live hedges require new model-universe evidence as well as
+rule compatibility, freshness, and confirmation—not merely a discovered link.
+
+## Run locally
+
+Use **Node 24 LTS** and **pnpm 12.4.2**.
 
 ```sh
 git clone https://github.com/CaptainLEVI-XXX/hedgenet.git
@@ -58,13 +156,35 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open http://127.0.0.1:3000. The hosted demo includes the trained model; a clone
-doesn't include private weights or credentials. See [the engineering reference](ENGINEERING.md)
-for model setup, Jev configuration, tests, and deployment, or [CONTRIBUTING.md](CONTRIBUTING.md)
-to work on the code.
+Open http://127.0.0.1:3000. **A clone alone cannot run the neural model:** trained
+weights are private, and inference needs separately prepared artifacts and a
+configured runtime. The hosted app includes those artifacts. Local UI work and
+offline financial checks do not require cloud credentials.
 
-![HedgeNet showing measured neural activations, a synthetic hedge, and remaining loss](assets/hedgenet-demo.png)
+```sh
+pnpm test
+pnpm typecheck
+pnpm demo:foundation
+pnpm build:web
+```
 
-Built for the **CreateOS × Stripe Projects hackathon**. The experimental numerical
-runtime uses [Handwired](https://github.com/chenglou/handwired); its MIT notice is
-included with the deployed runtime.
+See [ENGINEERING.md](ENGINEERING.md#run-locally) for server-side Jev configuration,
+catalogue setup, the older-Node wrapper, private model preparation, and deployment.
+Never put credentials in browser bundles or public environment variables.
+
+## Tech and project layout
+
+**Next.js · React · TypeScript · Jev / TypeSafe · Handwired · HiGHS · CreateOS**
+
+| Path | Responsibility |
+| --- | --- |
+| `apps/web/` | Interface, API routes, intake orchestration, and neural serving. |
+| `packages/core/` | Exact financial accounting, scenarios, teacher, encoding, and decoding. |
+| `packages/intake/` | Jev adapter, exposure drafts, discovery, and confirmation contracts. |
+| `packages/venue/` | Polymarket catalogue, selected books, rules, fees, and freshness. |
+| `packages/training/` | Synthetic datasets, isolated training, and remote numerical runtime. |
+| `tools/` / `deploy/web/` | Local checks, catalogue tooling, and serving/deployment preparation. |
+| `tests/` | Financial, intake, venue, training, and web regression checks. |
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing the code; the
+[engineering reference](ENGINEERING.md) covers deeper contracts and experiments.
