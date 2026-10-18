@@ -14,6 +14,6 @@ export type NeuralPreview = Omit<Preview, 'schemaVersion' | 'proposalSource' | '
   example: 'crypto'; outcome: 'improvement' | 'no_improvement';
   exposure: { units: string; referencePriceUsd: string };
   model: { version: string; weightsHash: string; qualityPolicy: 'advisory'; qualityWarnings: string[] };
-  execution: { provider: 'createos'; runtime: 'sandbox' | 'application'; inferenceMs: number; totalMs: number };
+  execution: { provider: 'createos' | 'local'; runtime: 'sandbox' | 'application' | 'local'; inferenceMs: number; totalMs: number };
   repair: { budgetScaled: boolean; multiplier: string; droppedLegIds: string[] };
 };

@@ -20,7 +20,8 @@ function fixture(index: number) {
       inputGroups: selected.map((f, i) => ({ label: labels[i]!, value: features.values[f]! })),
       inputWeights: Array.from({ length: 32 }, () => Array(5).fill(0)), outputWeights: Array.from({ length: 6 }, () => Array(32).fill(0)) } };
   const parameters = Array<number>(24176).fill(0);
-  const finish = () => finishNeuralPreview(assembled, response, expected, parameters, ['Test fixture'], 10);
+  const finish = (runtime: 'sandbox' | 'application' | 'local' = 'sandbox') =>
+    finishNeuralPreview(assembled, response, expected, parameters, ['Test fixture'], 10, runtime);
   return { assembled, response, finish };
 }
 
@@ -52,13 +53,13 @@ describe('server neural financial boundary', () => {
     await expect(buildNeuralPreview(input)).rejects.toThrow('Production requires hosted model configuration');
   });
 
-  it('permits only the exact internal HTTP endpoint in sandbox mode', async () => {
+  it.each(['sandbox', 'local'])('permits only the exact internal HTTP endpoint in %s mode', async runtime => {
     const dir = mkdtempSync(join(tmpdir(), 'hedgenet-loopback-test-'));
     try {
       vi.stubEnv('HEDGENET_APP_ROOT', dir);
       vi.stubEnv('HEDGENET_SERVING_DIR', join(dir, 'serving'));
       vi.stubEnv('HEDGENET_MODEL_TOKEN', 'test-only-token'.repeat(4));
-      vi.stubEnv('HEDGENET_RUNTIME', 'sandbox');
+      vi.stubEnv('HEDGENET_RUNTIME', runtime);
       vi.stubEnv('HEDGENET_MODEL_URL', 'http://127.0.0.1:8080');
       await expect(buildNeuralPreview(input)).rejects.toThrow('Prepare the neural serving model first');
       for (const url of ['http://model.invalid:8080', 'http://127.0.0.1:8081', 'http://localhost:8080', 'http://127.0.0.1:8080/other']) {
@@ -67,6 +68,9 @@ describe('server neural financial boundary', () => {
       }
       vi.stubEnv('HEDGENET_RUNTIME', 'application');
       vi.stubEnv('HEDGENET_MODEL_URL', 'http://127.0.0.1:8080');
+      await expect(buildNeuralPreview(input)).rejects.toThrow('Invalid hosted model configuration');
+      vi.stubEnv('HEDGENET_RUNTIME', 'local');
+      vi.stubEnv('NODE_ENV', 'production');
       await expect(buildNeuralPreview(input)).rejects.toThrow('Invalid hosted model configuration');
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
@@ -108,6 +112,12 @@ describe('server neural financial boundary', () => {
     const p = fixture(4).finish();
     expect(p.outcome).toBe('no_improvement');
     expect(Number(p.valuation.totalCostUsd)).toBeGreaterThan(0);
+  });
+
+  it('labels local inference without claiming CreateOS execution', () => {
+    const f = fixture(0);
+    expect(f.finish('local').execution).toMatchObject({ provider: 'local', runtime: 'local' });
+    expect(f.finish('sandbox').execution).toMatchObject({ provider: 'createos', runtime: 'sandbox' });
   });
 
   it('rejects stale identity, feature/weight trace substitution, and dimension mismatches', () => {

@@ -161,6 +161,14 @@ weights are private, and inference needs separately prepared artifacts and a
 configured runtime. The hosted app includes those artifacts. Local UI work and
 offline financial checks do not require cloud credentials.
 
+For this workspace with its verified private artifacts, stop `pnpm dev` and run
+`pnpm dev:local`. It starts the authenticated numeric model on loopback port 8080
+and the frontend on port 3000, using the same checkpoint without contacting
+CreateOS for inference. Results explicitly report **local** execution. This is
+not an automatic fallback and does not restore an unavailable hosted sandbox.
+The command requires `.amp/in/web-deploy/model` and `.amp/in/serving`, prepared
+through the existing verified model workflow; it does not download or train weights.
+
 ```sh
 pnpm test
 pnpm typecheck

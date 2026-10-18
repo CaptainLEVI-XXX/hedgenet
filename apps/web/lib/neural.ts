@@ -113,7 +113,7 @@ const labels = ['Budget / loss scale', 'Worst original loss / scale', 'First sce
 /** Financial assembly is separate from transport so binding failures can be tested offline. */
 export function finishNeuralPreview(assembled: ReturnType<typeof assembleNeuralProblem>, raw: unknown,
   expected: { runId: string; modelVersion: string; weightsHash: string; contractHash: string }, parameters: number[],
-  qualityWarnings: string[], totalMs: number, runtime: 'sandbox' | 'application' = 'sandbox'): NeuralPreview {
+  qualityWarnings: string[], totalMs: number, runtime: 'sandbox' | 'application' | 'local' = 'sandbox'): NeuralPreview {
   const r = responseSchema.parse(raw);
   const { input, problem, features, scenarios } = assembled;
   if (r.runId !== expected.runId || r.budgetUsd !== problem.budgetUsd || r.featuresHash !== sha(JSON.stringify(features.values))
@@ -148,7 +148,7 @@ export function finishNeuralPreview(assembled: ReturnType<typeof assembleNeuralP
     legs: problem.legs.map((leg, j) => ({ legId: leg.legId, label: names[Math.floor(j / 2)]!, side: j % 2 === 0 ? 'YES' : 'NO', price: leg.asks[0]!.price })),
     exposure: { units: input.units, referencePriceUsd: input.referencePriceUsd },
     model: { version: expected.modelVersion, weightsHash: expected.weightsHash, qualityPolicy: 'advisory', qualityWarnings },
-    execution: { provider: 'createos', runtime, inferenceMs: r.inferenceMs, totalMs },
+    execution: { provider: runtime === 'local' ? 'local' : 'createos', runtime, inferenceMs: r.inferenceMs, totalMs },
     repair: { budgetScaled: decoded.repair.budgetScaled, multiplier: decoded.repair.multiplier, droppedLegIds: decoded.repair.droppedLegIds } };
 }
 
@@ -158,8 +158,13 @@ export async function buildNeuralPreview(raw: unknown): Promise<NeuralPreview> {
   const root = repositoryRoot();
   const explicitHosted = process.env.HEDGENET_MODEL_URL !== undefined || process.env.HEDGENET_MODEL_TOKEN !== undefined;
   const sandboxRuntime = process.env.HEDGENET_RUNTIME === 'sandbox';
+  const localRuntime = process.env.HEDGENET_RUNTIME === 'local';
+  if (localRuntime && (process.env.NODE_ENV === 'production' || !explicitHosted)) {
+    throw new NeuralUnavailableError('Invalid hosted model configuration.');
+  }
   const hostedUrl = z.url().refine(url => url.startsWith('https://')
-    || (sandboxRuntime && url === 'http://127.0.0.1:8080'));
+    || ((sandboxRuntime || localRuntime) && url === 'http://127.0.0.1:8080'))
+    .refine(url => !localRuntime || url === 'http://127.0.0.1:8080');
   const hostedEnvironment = explicitHosted ? z.object({ url: hostedUrl, token: z.string().min(32) })
     .safeParse({ url: process.env.HEDGENET_MODEL_URL, token: process.env.HEDGENET_MODEL_TOKEN }) : undefined;
   if (hostedEnvironment && !hostedEnvironment.success) throw new NeuralUnavailableError('Invalid hosted model configuration.');
@@ -205,7 +210,7 @@ export async function buildNeuralPreview(raw: unknown): Promise<NeuralPreview> {
         chunks.push(Buffer.from(value));
       }
       return finishNeuralPreview(assembled, JSON.parse(Buffer.concat(chunks).toString('utf8')), { ...registry, runId },
-        parameters, registry.qualityWarnings, Date.now() - started, sandboxRuntime ? 'sandbox' : 'application');
+        parameters, registry.qualityWarnings, Date.now() - started, localRuntime ? 'local' : sandboxRuntime ? 'sandbox' : 'application');
     }
     const sandbox = registry.sandboxId;
     let response: unknown;
