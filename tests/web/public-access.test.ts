@@ -60,6 +60,7 @@ it('caps anonymous public calls across endpoints and resets the short window wit
   } });
   for (let i = 0; i < 10; i++) await guardedJson(paid(i % 2 ? '/api/intake' : '/api/neural'), 100);
   await expect(guardedJson(paid('/api/intake'), 100)).rejects.toMatchObject({ status: 429 });
+  await expect(guardedJson(paid('/api/market'), 100)).rejects.toMatchObject({ status: 429 });
   await expect(guardedJson(paid('/api/preview'), 100)).resolves.toEqual({});
   vi.advanceTimersByTime(60_000);
   await expect(guardedJson(paid('/api/neural'), 100)).resolves.toEqual({});

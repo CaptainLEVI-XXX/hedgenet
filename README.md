@@ -45,6 +45,12 @@ Custom intake keeps your original description and requested date visible. It
 does not replace them with the BTC example. Choose the separate demo explicitly
 to explore neural position sizing with fictional markets.
 
+The current local build also lets you **Read rules & live books** for a suggested
+event: inspect its full published rules, fresh YES/NO best asks, supported fees,
+and direct Polymarket links. This is market review, not a confirmed hedge or a
+neural share recommendation. Selections expire after ten minutes; submit the
+exposure again if they expire. This addition has not yet been deployed.
+
 ## What you get
 
 | Capability | Why it matters |
@@ -168,6 +174,9 @@ CreateOS for inference. Results explicitly report **local** execution. This is
 not an automatic fallback and does not restore an unavailable hosted sandbox.
 The command requires `.amp/in/web-deploy/model` and `.amp/in/serving`, prepared
 through the existing verified model workflow; it does not download or train weights.
+It loads server-side configuration from an optional root `.env`; custom intake
+requires `JEV_API_KEY` and a prepared live catalogue. Market review also needs
+network access to Polymarket's Gamma and CLOB APIs.
 
 ```sh
 pnpm test

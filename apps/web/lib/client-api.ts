@@ -1,6 +1,7 @@
 // Browser-side request helpers. Types only from server modules; no server code is bundled.
 import type { Preview } from './preview.ts';
 import type { LiveIntakeResult } from './live-intake.ts';
+import type { LiveMarketResult } from './live-market.ts';
 import type { ExampleId } from './presets.ts';
 import type { NeuralInput, NeuralPreview } from './neural-contract.ts';
 
@@ -56,4 +57,8 @@ export function requestLiveIntake(text: string, signal: AbortSignal) {
 
 export function requestNeural(input: NeuralInput, signal: AbortSignal) {
   return postJson<NeuralPreview>('/api/neural', input, signal, json => json.preview);
+}
+
+export function requestLiveMarket(input: { selectionToken: string; eventId: string }, signal: AbortSignal) {
+  return postJson<LiveMarketResult>('/api/market', input, signal, json => json);
 }

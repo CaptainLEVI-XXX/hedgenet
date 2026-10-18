@@ -13,7 +13,7 @@ it.each([
   ['rainfall', 'conditional_loss', 'I lose $5,000 if Heathrow records rain on January 15, 2027. My budget is $400.'],
 ])('preserves a custom %s exposure instead of substituting the BTC fixture', (observable, template, text) => {
   const result: LiveIntakeResult = {
-    ok: true, mode: 'live', durationMs: 12,
+    ok: true, mode: 'live', durationMs: 12, selectionToken: null,
     interpretation: { status: 'needs_clarification', failure: null, confirmed: false,
       fields: Object.entries({ observable, templateId: template,
         ...(template === 'terminal_downside' ? { units: '0.35', referencePriceUsd: '65000' } : { fixedLossUsd: '5000' }),

@@ -70,6 +70,8 @@
 .market-links a { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; line-height:1.5; color:#294eac; text-decoration:none; padding:9px 0; border-bottom:1px solid #edf0f5; }
 .market-links a:hover { color:var(--blue); text-decoration:underline; }
 .market-links a span { flex-shrink:0; }
+.live-market-review { padding:18px 16px; }
+.live-market-review h3 { display:block; }
 .empty-result { color:var(--muted); line-height:1.7; }
 .intake-pending,.intake-empty { max-width:780px; margin:64px auto; }
 .intake-pending h1,.intake-empty h1 { font-size:28px; letter-spacing:-.6px; margin:18px 0; }

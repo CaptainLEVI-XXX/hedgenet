@@ -5,6 +5,7 @@ import { createJevClient, intakeExposure } from '@hedgenet/intake';
 import type { JevClient } from '@hedgenet/intake';
 import { createCatalogueIndex, loadCatalogue } from '@hedgenet/venue';
 import { RequestRejected } from './http.ts';
+import { rememberLiveSelection } from './live-market.ts';
 
 type CatalogueIndex = ReturnType<typeof createCatalogueIndex>;
 export type LiveIntakeDeps = { client: () => JevClient | null; catalogue: () => Promise<CatalogueIndex>; now?: () => Date };
@@ -79,6 +80,8 @@ export async function runLiveIntake(input: { text: string; timezone: string }, d
     return {
       ok: true as const,
       mode: 'live' as const,
+      selectionToken: discovery.suggestions.length && discovery.catalogue?.dataMode === 'live'
+        ? rememberLiveSelection(draft, discovery.suggestions.map(item => item.eventId)) : null,
       interpretation: {
         status: draft.status,
         failure: draft.failure,

@@ -97,7 +97,7 @@ type DemoCaps = { minute: { start: number; count: number }; day: { start: number
 const processGlobal = globalThis as typeof globalThis & { __hedgenetDemoCaps?: DemoCaps };
 const caps = processGlobal.__hedgenetDemoCaps ??= { minute: { start: 0, count: 0 }, day: { start: 0, count: 0 } };
 function capPaidRequest(request: Request) {
-  if (!publicOrigin() || !['/api/intake', '/api/neural'].includes(new URL(request.url).pathname)) return;
+  if (!publicOrigin() || !['/api/intake', '/api/neural', '/api/market'].includes(new URL(request.url).pathname)) return;
   const now = Date.now();
   if (now < caps.minute.start || now - caps.minute.start >= 60_000) caps.minute = { start: now, count: 0 };
   if (now < caps.day.start || now - caps.day.start >= 86_400_000) caps.day = { start: now, count: 0 };

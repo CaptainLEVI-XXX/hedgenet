@@ -10,7 +10,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "dev": "node node_modules/next/dist/bin/next dev apps/web --hostname 127.0.0.1",
-    "dev:local": "node tools/dev-local.mjs",
+    "dev:local": "node --env-file-if-exists=.env tools/dev-local.mjs",
     "build:web": "pnpm --filter @hedgenet/web build",
     "demo:foundation": "node examples/financial-foundation.ts",
     "catalogue": "node tools/catalogue.ts",
