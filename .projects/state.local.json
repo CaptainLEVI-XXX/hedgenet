@@ -1,0 +1,49 @@
+{
+  "version": 4,
+  "project": {
+    "catalog": "prod",
+    "initializedAt": "2026-10-17T18:03:29.533Z",
+    "merchantDisplayName": null,
+    "merchantId": "acct_1URbrwAtvFr0Vjwh",
+    "projectId": "project_61VazuT4O06X37y0a16VazpI2qSQ14PbBpnDTyRrsOL2",
+    "projectName": "polyhedge"
+  },
+  "providers": {
+    "createos": {
+      "accountRequestId": "facctrq_61VazwDMt1HeipCW516VazpI2qSQ14PbBpnDTyRrsOFU",
+      "configuration": {},
+      "linkedAt": "2026-10-17T18:05:18.602Z",
+      "providerId": "prvdr_61V0eGC6sUPXoATb051se",
+      "providerName": "createos",
+      "redirectUrl": null,
+      "requestedAt": "2026-10-17T18:05:18.602Z",
+      "status": "complete"
+    }
+  },
+  "resources": {
+    "createos-plan": {
+      "configuration": {},
+      "createdAt": "2026-10-17T18:05:32.902Z",
+      "lastRevealedAt": "2026-10-17T18:05:33.596Z",
+      "lastStatus": "complete",
+      "livemode": true,
+      "name": "createos-plan",
+      "providerId": "prvdr_61V0eGC6sUPXoATb051se",
+      "providerName": "createos",
+      "resourceId": "fres_61VazwSG9dh9Ycjka16VazpI2qSQ14PbBpnDTyRrsD0y",
+      "serviceId": "free"
+    },
+    "createos-project": {
+      "configuration": {},
+      "createdAt": "2026-10-17T18:05:42.818Z",
+      "lastRevealedAt": "2026-10-17T18:05:43.612Z",
+      "lastStatus": "complete",
+      "livemode": true,
+      "name": "createos-project",
+      "providerId": "prvdr_61V0eGC6sUPXoATb051se",
+      "providerName": "createos",
+      "resourceId": "fres_61VazwcdmTHPLxxRl16VazpI2qSQ14PbBpnDTyRrs9D6",
+      "serviceId": "project"
+    }
+  }
+}

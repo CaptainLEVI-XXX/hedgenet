@@ -46,6 +46,8 @@ __pycache__/
 .env
 .env.*
 
-# Stripe's public stack checker needs only this non-secret service manifest.
+# Stripe's submission checker needs service and project-identification metadata.
+# Review both files for secrets before committing CLI-generated updates.
 /.projects/*
 !/.projects/state.json
+!/.projects/state.local.json
