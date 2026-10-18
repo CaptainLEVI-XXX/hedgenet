@@ -1,130 +1,106 @@
 # HedgeNet
 
-**Describe your risk. Explore your hedge.**
+**Describe your downside. See what a hedge could protect—and what it cannot.**
 
-HedgeNet is a research prototype for neural hedge construction, starting with
-prediction markets. It models potential losses; it does not place trades,
-provide insurance, or guarantee protection.
+HedgeNet turns plain-language financial exposure into a neural hedge simulation.
+Set a budget, explore proposed position sizes, and see their cost and remaining
+modeled loss. Built for the **CreateOS × Stripe Projects hackathon**.
 
-## Run the local app
+[**Try the live demo**](https://01m55gps20t94024xvf546rg91-3000.app.sb.createos.sh)
+· [Stripe Projects stack](https://projects.dev/s#v1:createos~project)
+· [Contributing](CONTRIBUTING.md)
 
-```sh
-pnpm install --frozen-lockfile
-pnpm dev
+> **Research demo, not a trading service.** The trained model currently serves
+> synthetic Bitcoin scenarios. Polymarket links are discovery references, not
+> verified hedges or the instruments used in the simulation. No trades, wallets,
+> payments, insurance, or guaranteed protection.
+
+## What it does
+
+Crypto holders can describe the downside they fear, but turning that concern into
+hedge quantities—and understanding the risk that remains—is harder. HedgeNet
+makes that process inspectable:
+
+- **Describe exposure:** Jev extracts a structured, editable draft from your text.
+- **Set a budget:** the trained network proposes position sizes for the supported simulation.
+- **Check the numbers:** deterministic code evaluates cost, constraints, payouts,
+  and worst modeled loss. Non-improving baskets are not recommended.
+- **Look inside the model:** the UI replays measured activations and learned
+  weights. The animation is inference replay, **not live training**.
+- **Explore related events:** open real Polymarket event links from the cached
+  catalogue, clearly separated from the fictional simulation positions.
+
+## Try it in a minute
+
+1. Open the [demo](https://01m55gps20t94024xvf546rg91-3000.app.sb.createos.sh)—no password required.
+2. Choose **A drop in Bitcoin**, then **Build my demo hedge**. The simulation runs
+   automatically; there is no separate confirmation screen.
+3. Change the budget to compare cost, positions, and remaining loss. Set it to
+   zero to see the no-improvement outcome.
+4. Pause the neural replay or open **Details & assumptions** for exact scenarios,
+   model provenance, and a downloadable result.
+
+Custom descriptions go through Jev; the preset and manual BTC entry do not need
+Jev. Supported BTC fields feed the fixed synthetic simulation, not a live-market
+hedge. The model uses fictional $60k/$80k settlement buckets for 30 October 2026.
+Weather is an illustration, not a trained weather model.
+
+The sandbox can sleep when idle. In-app requests retry its explicit wake-up
+response for up to 20 retries, three seconds apart. If the first page itself says
+“Sandbox is waking up,” wait a moment and refresh. Real application errors are
+not automatically replayed. The public demo shares a limit of 10 intake/neural
+requests per minute and 100 per day per process; counters reset on restart.
+
+## How the pieces fit together
+
+| Component | Responsibility |
+| --- | --- |
+| **Jev / TypeSafe** | Interpret exposure and judge cached discovery candidates. Its suggestions do not certify market compatibility. |
+| **Neural model** | Propose quantities from encoded exposure, budget, books, and scenario payoffs. The demo supplies synthetic books. |
+| **Deterministic evaluator** | Check budget, depth, order minima, costs including fees, and scenario losses independently of the model. |
+| **Codex builder** | Author and iterate training code inside CreateOS, separately from user requests. |
+| **CreateOS Sandbox** | Run generated training code; host the deployed Next.js app, backend routes, and authenticated numerical model runtime after serving preparation. |
+| **Stripe Projects** | Provision the CreateOS project and Free plan: `createos/project` and `createos/free`. Jev and Codex were integrated separately. |
+
+**Serving:** description → Jev draft → synthetic BTC problem → neural quantities
+→ deterministic checks → positions, cost, remaining loss, and measured trace.
+Preset/manual entry starts at the synthetic BTC problem.
+
+**Training:** trusted optimizer examples → Codex-generated training code in
+CreateOS → frozen candidate outputs → independent host-side financial evaluation
+→ experimental checkpoint. The builder does not grade itself. No generated
+candidate code runs on the developer's machine, and no training runs per request.
+
+The numerical encoder has 738 features; the trained model has 32 hidden units.
+The UI displays a selected subset of the actual features, activations, and
+weights. Monetary truth uses canonical decimal strings:
+
+```text
+Net loss = original loss + purchase cost including fees − payout
 ```
 
-Use Node 24 (or the npx wrapper below), then open http://127.0.0.1:3000.
-The app binds to loopback; it is not a public deployment. Bitcoin and rain presets
-have different provenance: Bitcoin uses a trained experimental model in CreateOS;
-rain remains an illustrative allocation with server-side financial accounting.
-Arbitrary descriptions use live Jev intake and the cached catalogue when root
-`.env` contains `JEV_API_KEY` and `pnpm catalogue` has prepared the local cache.
-Keys never belong in `NEXT_PUBLIC_` variables. Run `pnpm build:web` for the app build.
+The evaluator preserves signed scenario gains and compares worst modeled loss
+with the unhedged baseline. The offline solver supplies training references; it
+never silently replaces neural inference.
 
-**Model-quality thresholds are advisory for this prototype.** The first three
-Codex-trained candidates missed the original targets; those results are retained.
-The selected Bitcoin checkpoint can now serve experimental simulations with real
-activation/weight traces. Exact budget, depth, identity and financial checks still
-apply. Non-improving candidates are shown as rejected, never recommended.
+## What is working—and what is not
 
-Choose Bitcoin or enter an exposure through Jev, review the BTC fields, and
-explicitly opt into the synthetic simulation. The model uses fictional $60k/$80k
-settlement buckets, not the discovered live events. Move the budget slider after
-the first run to recalculate; replay animates the completed trace without retraining.
-Weather is not trained; live market confirmation/serving remains unfinished.
-A protected synthetic demo has been verified on CreateOS Sandbox; this is not a
-production live-market service. No solver silently replaces the network.
+| Capability | Current scope |
+| --- | --- |
+| Hosted web app, backend, and model | Running together in CreateOS Sandbox; public demo access, authenticated model endpoint. |
+| Plain-language intake | Live Jev integration with provenance-bearing drafts; semantic accuracy is not established by access tests. |
+| BTC simulation | Trained checkpoint, deterministic decoding/checks, budget updates, and real inference traces. |
+| Market discovery | Cached Polymarket events with outbound links; not live executable recommendations. |
+| Financial foundation | Asset-downside, capped-threshold, and conditional-loss rules; scenario construction and valuation. |
+| Live-market hedging | Not connected end to end. Rule compatibility, fresh selected books, and confirmation remain necessary. |
+| Weather | Illustrative UI and financial foundations; no trained weather checkpoint. |
+| Model quality | Experimental. Statistical targets are advisory; exact financial and artifact checks remain mandatory. |
 
-### Prepare the existing sandbox for inference
-
-With an authorized existing CreateOS sandbox, the original private checkpoint,
-its neighboring candidate/mechanics artifacts, and the pinned Handwired checkout:
-
-```sh
-HEDGENET_SANDBOX_ID=your-existing-sandbox-id \
-  node tools/prepare-serving.ts /absolute/path/to/checkpoints/checkpoint-0005.json
-```
-
-This is an explicit cloud operation: it resumes the existing sandbox, removes
-the builder's Codex session, uploads verified serving files, compares the serving
-runtime with the original model inside CreateOS, and pauses the sandbox again.
-It creates no new resource or public URL. Private registry/weights remain under
-ignored `.amp/in/serving/`; they are not bundled into Git or the browser.
-
-Every inference verifies artifact and request hashes, runs in CreateOS, and pauses
-the sandbox before returning. The first measured request took about 30 seconds
-end to end, including lifecycle/transport; numerical inference took about 24 ms.
-No subscription/API call or new training occurs per inference. Cloud billing is
-separate and was not measured. Requests are serialized; a surviving operation
-lock must be cleared only after confirming remote termination and sandbox pause.
-
-### Package a protected hosted demo
-
-`node tools/prepare-web-deploy.ts` creates an explicit source/model/catalogue
-allowlist in ignored `.amp/in/web-deploy/`. It requires the prepared private
-serving artifacts and pinned numeric runtime; a Git clone alone has no trained
-weights. Never upload the repository root or add credentials to the bundle.
-
-The generated Dockerfile serves the full Next app. Configure server-side
-`HEDGENET_MODEL_URL` (HTTPS), `HEDGENET_MODEL_TOKEN`, `HEDGENET_PUBLIC_ORIGIN`
-(exact HTTPS origin, no trailing slash), `HEDGENET_DEMO_PASSWORD`, and
-`JEV_API_KEY`. Basic-auth username is `demo`. To intentionally open the demo to
-everyone, set `HEDGENET_PUBLIC_DEMO=true`; a valid public HTTPS origin is still
-required, and the model's bearer token remains mandatory. Paid API attempts are capped at
-10/minute and 100/day per process; use one replica. Counters reset on restart.
-`/api/health` is public and checks web readiness, not model availability.
-
-For a CreateOS sandbox hosting both processes, install/build the allowlisted
-bundle with Node 24 and pnpm 12.4.2, then run:
-
-```sh
-node --env-file=/external/private.env deploy/web/start-sandbox.mjs
-```
-
-The launcher serves Next on port 3000 and binds the authenticated numeric model
-to `127.0.0.1:8080`. CreateOS ingress can also forward to loopback ports: the model
-bearer token, not its bind address, protects inference. Model health is public.
-The launcher supplies explicit sandbox runtime configuration; arbitrary
-HTTP model endpoints remain forbidden. Supply the same secret variables except
-the model URL, which the launcher sets. No training or Codex session is started.
-Keep the environment file outside the bundle. Never disable model authentication.
-Hosted serving stays resident rather than pausing after each request;
-it can incur compute charges. Catalogue data is a snapshot, not an automatic
-refresh service. Build success is not proof of a working public deployment.
-
-## Current implementation
-
-The financial foundation is implemented. It supports three explicit loss rules:
-
-- **Asset downside:** units held × the positive drop below a reference price.
-- **Threshold loss:** cost per unit above/below a threshold, capped at a confirmed
-  maximum. Signed observations support cases such as temperature.
-- **Conditional loss:** a fixed loss if an exactly identified condition occurs.
-
-The scenario accounting function calculates **original loss + total cost − payout**
-for each supplied state. It preserves signed gains and compares worst modeled
-loss with the no-hedge case. The independent position evaluator now derives cost
-and payouts from trusted books, fee schedules and named scenario payoffs. It
-rejects positions exceeding reserved depth, minimum-size rules or the exact budget.
-It does not select positions or establish market compatibility, complete scenario
-coverage, quote freshness or model eligibility. Those checks remain necessary
-before any proposal can be recommended.
-
-The scenario builder now derives losses and payouts for matching binary conditions
-or complete continuous numeric partitions, including boundary limits and tails.
-This establishes coverage under supplied normalized rules, not that those rules
-faithfully describe a live market or the user's exposure.
-
-Public market discovery now has a persisted categorized catalogue and local
-search. Selected CTF order books can also be read and checked for identity,
-precision and freshness, and bound to full rule text, current status and explicit
-supported fees. Jev now has a bounded, validated adapter and provenance-bearing
-exposure drafts, tested with synthetic responses and one live intake trial.
-An offline optimizer produces independently checked training references, and the
-bounded Codex/CreateOS harness has trained a Bitcoin model. The website serves
-that model against synthetic books locally or in a protected CreateOS sandbox.
-There is **no complete live-market hedge flow or production-grade service yet**.
-Synthetic examples make no fill claim.
+The selected candidate retained **51.2% of the teacher's improvement at the
+median across 48 synthetic validation cases**, below the original 80% target.
+It is served under the prototype's advisory-quality policy, not relabeled as
+having passed that target. Held-out quality and real-market usefulness remain
+unestablished. The detailed experiment record is below.
 
 ## Run locally
 
@@ -132,13 +108,33 @@ Use **Node 24 LTS** and **pnpm 12.4.2**. The Node version is recorded in
 `.node-version`; the package manager and dependency versions are locked.
 
 ```sh
+git clone https://github.com/CaptainLEVI-XXX/hedgenet.git
+cd hedgenet
 pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Open http://127.0.0.1:3000. Local development binds to loopback.
+
+**A Git clone does not include the trained weights or provider credentials.**
+The UI, weather illustration, and offline checks can run without cloud access;
+BTC inference needs separately prepared private artifacts and a configured
+CreateOS runtime. Use the hosted demo to try the complete synthetic BTC flow.
+
+For custom-text intake, configure server-side `JEV_API_KEY` in the ignored root
+`.env`, then run `pnpm catalogue refresh`. Never use `NEXT_PUBLIC_` for secrets.
+Catalogue refresh reads the public Gamma API; user requests search the cache.
+
+### Checks
+
+```sh
 pnpm test
 pnpm typecheck
 pnpm demo:foundation
+pnpm build:web
 ```
 
-These commands need no credentials or cloud compute. If your default Node is
+These checks need no credentials or cloud compute. If your default Node is
 older, you can run the checks without changing the system installation:
 
 ```sh
@@ -148,8 +144,91 @@ npx --yes --package=node@24 --package=pnpm@12.4.2 --call 'pnpm install --frozen-
 For reproducible local check records, use `pnpm lab:check <local-packet.json>`.
 The [packet format and safety limits](CONTRIBUTING.md#recorded-local-verification)
 explain what is captured. This is a trusted local verification runner, not the
-planned Codex/CreateOS training controller. Private instructions, work packets
+Codex/CreateOS training controller. Private instructions, work packets
 and generated evidence stay out of Git.
+
+## Repository map
+
+| Path | Contents |
+| --- | --- |
+| `apps/web/` | Next.js/React interface, API routes, intake orchestration, neural serving, and request guards. |
+| `packages/core/` | Exact loss/scenario accounting, position valuation, teacher, feature encoding, and neural decoding. |
+| `packages/intake/` | Jev adapter, exposure drafts, discovery, rule review, and confirmation contracts. |
+| `packages/venue/` | Polymarket catalogue, selected books, rules, fees, and freshness checks. |
+| `packages/training/` | Synthetic datasets, isolated training workflow, and remote numerical runtime. |
+| `tools/` | Catalogue, laboratory checks, dataset/training, and serving/deployment preparation. |
+| `deploy/web/` | Full-app Dockerfile and sandbox process launcher. |
+| `tests/` | Financial, intake, venue, training, and web regression checks. |
+
+## Deployment and engineering reference
+
+<details>
+<summary>Serving setup, deployment configuration, financial contracts, and training details</summary>
+
+### Prepare a private inference sandbox
+
+With an authorized existing CreateOS sandbox, the original private checkpoint,
+its neighboring candidate/mechanics artifacts, and the pinned Handwired checkout:
+
+```sh
+HEDGENET_SANDBOX_ID=your-existing-sandbox-id \
+  node tools/prepare-serving.ts /absolute/path/to/checkpoints/checkpoint-0005.json
+```
+
+This is an explicit cloud operation: it resumes a sandbox with ingress disabled,
+removes the builder's Codex session, uploads verified serving files, compares the
+serving runtime with the original model inside CreateOS, and pauses it again.
+It creates no new resource or public URL. **Do not run this preparation against
+the sandbox hosting the public app.** Private registry/weights remain under
+ignored `.amp/in/serving/`; they are not bundled into Git or the browser.
+
+The private CLI-driven inference path verifies hashes, resumes/executes/pauses
+the sandbox for each request, and serializes operations. A surviving operation
+lock must be cleared only after confirming remote termination and sandbox pause.
+This is different from hosted serving, which keeps the model process resident.
+Numerical inference requires no generative-model call or new training; Jev intake
+is separate. Compute charges and model-provider usage are separate.
+
+### Package the hosted demo
+
+`node tools/prepare-web-deploy.ts` creates an explicit source/model/catalogue
+allowlist in ignored `.amp/in/web-deploy/`. It requires the prepared private
+serving artifacts and pinned numeric runtime. Never upload the repository root
+or add credentials to the bundle.
+
+The generated Dockerfile serves the full Next app. Set these only on the server:
+
+| Variable | Purpose |
+| --- | --- |
+| `JEV_API_KEY` | Custom-text exposure interpretation. |
+| `HEDGENET_MODEL_URL` | Authenticated model service URL; external endpoints require HTTPS. |
+| `HEDGENET_MODEL_TOKEN` | Internal model bearer token; never sent to the browser. |
+| `HEDGENET_PUBLIC_ORIGIN` | Exact public HTTPS origin, without a trailing slash. |
+| `HEDGENET_PUBLIC_DEMO` | Set to `true` only to intentionally allow anonymous demo access. |
+| `HEDGENET_DEMO_PASSWORD` | Required for protected public mode when anonymous access is not enabled; username `demo`. |
+
+For a CreateOS sandbox hosting both processes, install/build the allowlisted
+bundle with Node 24 and pnpm 12.4.2, then run:
+
+```sh
+node --env-file=/external/private.env deploy/web/start-sandbox.mjs
+```
+
+The launcher serves Next on port 3000 and binds the authenticated numerical model
+to `127.0.0.1:8080`. CreateOS ingress can also forward to loopback ports: the model
+bearer token, not its bind address, protects inference. The launcher supplies
+the local model URL and sandbox runtime configuration. No training or Codex
+session starts with the web app. Keep the environment file outside the bundle.
+
+`/api/health` checks web readiness, not model availability; model health is also
+public. Never disable model authentication. Use one web replica for the existing
+in-memory aggregate request limits. Hosted serving does not pause after each
+request, but provider idle auto-pause can still apply. It can incur compute
+charges. Build success alone does not establish a working public deployment.
+
+On the 1 GB sandbox, building alongside the running app exhausted memory.
+Build a separate release with enough free memory; retain the previous release
+for rollback. No paid upgrade is implied by these instructions.
 
 ### Market catalogue
 
@@ -319,7 +398,7 @@ with synthetic rules/books. Rounded or discrete temperature markets, voids,
 disputes, depeg and real execution are not covered by this modeled guarantee.
 Hashes detect content drift, not authenticity or correct interpretation.
 
-## Intended architecture
+### Intended live-market architecture (not the current demo)
 
 **User requests:** Jev interprets exposure → the backend selects compatible
 cached markets and fetches fresh books → an accepted neural model in CreateOS
@@ -327,7 +406,7 @@ proposes positions → independent financial code validates the proposal.
 
 **Builder training:** Codex writes/edits training code in CreateOS → bounded
 experiments use optimizer-generated examples → a fixed external evaluator checks
-the frozen candidate → the builder accepts or rejects it. Codex cannot edit the
+the frozen candidate → the host controller records its result. Codex cannot edit the
 authoritative evaluator or final test labels. No code generation or training
 happens per user request.
 
@@ -338,7 +417,7 @@ an OpenAI API key. Three candidates completed. Serving preparation removes that
 session; running numeric inference needs no generative-model credentials.
 Remaining subscription quota and compute credit balance are unknown.
 
-## Core contracts
+### Core contracts
 
 `@hedgenet/core` exports `LossTemplateSchema`, `ObservationSchema`, `lossAt`, and
 `summarizeScenarioLosses`, `buildScenarios`, `createValuationProblem` and
@@ -527,6 +606,8 @@ quality advisory for the prototype; the selected third candidate is served as
 experimental, without relabeling those historical results as passing. Held-out
 quality remains unestablished; weather was not trained.
 
+</details>
+
 ## References and contribution
 
 The previous [PolyHedge](https://github.com/CaptainLEVI-XXX/polyhedge) informs the
@@ -538,5 +619,9 @@ circuit runtime, pinned to [this revision](https://github.com/chenglou/handwired
 Its MIT notice accompanies the runtime in the sandbox. Model weights remain local
 private artifacts; no upstream application source is shipped here.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. Credentials, local
-provider state and internal plans stay out of Git. Do not force-add ignored files.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. Stripe's submission
+checker requires both `.projects/state.json` and `.projects/state.local.json`;
+the committed files contain service and project-identification metadata. Review
+CLI-generated updates before committing them. Credentials, `.env` files, the
+vault/cache, private model artifacts, and internal plans stay out of Git. Do not
+force-add ignored files.
