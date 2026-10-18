@@ -71,7 +71,7 @@ export function HedgeApp() {
       </header>
       <main id="main" ref={main} tabIndex={-1}>
         {view.kind === 'describe' && <><Composer draft={draft} notice={notice} busy={false} onDraft={setDraft} onChoose={choose} onSubmit={submit} />
-          <div className="intro-foot"><button className="text-btn" onClick={() => setView({ kind: 'neural', preset: false, session: ++session.current })}>Enter BTC amounts manually</button></div></>}
+          <div className="intro-foot"><button className="text-btn" onClick={() => setView({ kind: 'neural', preset: false, session: ++session.current })}>Adjust amounts in the BTC demo</button></div></>}
         {view.kind === 'neural' && <NeuralWorkspace key={view.session} initial={view.preset ? { units: '0.2', referencePriceUsd: '70000', budgetUsd: DEFAULT_BUDGET_USD } : {}} autoRun={view.preset} onEdit={edit} />}
         {view.kind === 'preview' && <PreviewWorkspace key={view.session} example={view.example} initialBudget={DEFAULT_BUDGET_USD} onEdit={edit} />}
         {view.kind === 'nomatch' && <NoMatch text={draft.trim()} onEdit={edit} onTryBitcoin={tryBitcoin} />}

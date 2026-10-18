@@ -99,7 +99,7 @@ export async function runLiveIntake(input: { text: string; timezone: string }, d
         suggestions: discovery.suggestions.map(item => ({ eventId: item.eventId, title: item.title,
           url: item.url, relevance: Math.round(item.relevance * 100) / 100, reviewStatus: item.reviewStatus })),
       },
-      model: { status: 'unavailable' as const, message: 'No accepted neural model exists yet, so no hedge can be proposed. Nothing was substituted.' },
+      model: { status: 'unavailable' as const, message: 'No neural model is available for this exposure and real-market rules. The BTC demo uses a separate synthetic fixture; your request has not been changed to fit it.' },
       proposal: null,
       durationMs: Math.round(result.durationMs),
     };

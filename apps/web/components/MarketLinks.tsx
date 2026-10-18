@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 export type MarketLink = { eventId: string; title: string; url: string | null };
 
 /** Discovery links are separate from the fictional positions above them. */
-export function MarketLinks({ events }: { events?: MarketLink[] }) {
+export function MarketLinks({ events, description = 'Related events. Not used in this simulation.' }: { events?: MarketLink[]; description?: string }) {
   const [found, setFound] = useState<MarketLink[]>([]);
   useEffect(() => {
     if (events) return;
@@ -18,7 +18,7 @@ export function MarketLinks({ events }: { events?: MarketLink[] }) {
   if (!links.length) return null;
   return <section className="market-links" aria-label="Polymarket event links">
     <h3>Explore on Polymarket <span aria-hidden="true">↗</span></h3>
-    <p>Related events. Not used in this simulation.</p>
+    <p>{description}</p>
     {links.map(item => <a key={item.eventId} href={item.url!} target="_blank" rel="noopener noreferrer">{item.title}<span aria-hidden="true">↗</span></a>)}
   </section>;
 }

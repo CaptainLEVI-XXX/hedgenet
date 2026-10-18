@@ -75,6 +75,11 @@
 .intake-pending h1,.intake-empty h1 { font-size:28px; letter-spacing:-.6px; margin:18px 0; }
 .intake-pending > .spinner { display:block; width:24px; height:24px; }
 .intake-pending p,.intake-empty p { font-size:15px; color:var(--muted); line-height:1.7; }
+.intake-request { margin:0; padding:18px 22px; border-left:2px solid var(--blue); background:white; font-size:19px; line-height:1.6; overflow-wrap:anywhere; white-space:pre-wrap; }
+.intake-facts { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:18px; margin:24px 0; }
+.intake-facts dd { font-size:16px; }
+.intake-empty .intake-discovery { margin-top:12px; font-size:13px; }
+.intake-empty .live-actions { flex-wrap:wrap; margin-top:22px; }
 .intake-details { margin-top:20px; font-size:12px; }
 @media(max-width:1000px) {
   .neural-workspace .lab-stage { grid-template-columns:1fr; }

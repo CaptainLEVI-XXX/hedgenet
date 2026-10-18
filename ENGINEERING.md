@@ -29,9 +29,10 @@ makes that process inspectable:
    model provenance, and a downloadable result.
 
 Custom descriptions go through Jev; the preset and manual BTC entry do not need
-Jev. Supported BTC fields feed the fixed synthetic simulation, not a live-market
-hedge. The model uses fictional $60k/$80k settlement buckets for 30 October 2026.
-Weather is an illustration, not a trained weather model.
+Jev. Custom intake keeps the submitted description and date in an unconfirmed
+draft with market-discovery results; it never automatically substitutes the BTC
+simulation. That explicitly selected demo uses fictional $60k/$80k settlement
+buckets for 30 October 2026. Weather is an illustration, not a trained weather model.
 
 The sandbox can sleep when idle. In-app requests retry its explicit wake-up
 response for up to 20 retries, three seconds apart. If the first page itself says
@@ -50,9 +51,11 @@ requests per minute and 100 per day per process; counters reset on restart.
 | **CreateOS Sandbox** | Run generated training code; host the deployed Next.js app, backend routes, and authenticated numerical model runtime after serving preparation. |
 | **Stripe Projects** | Provision the CreateOS project and Free plan: `createos/project` and `createos/free`. Jev and Codex were integrated separately. |
 
-**Serving:** description → Jev draft → synthetic BTC problem → neural quantities
-→ deterministic checks → positions, cost, remaining loss, and measured trace.
-Preset/manual entry starts at the synthetic BTC problem.
+**Custom intake:** description → Jev draft → cached market discovery, with the
+original description and date preserved. No real-market hedge is priced yet.
+
+**Demo serving:** explicit preset/manual demo → synthetic BTC problem → neural
+quantities → deterministic checks → positions, cost, remaining loss, measured trace.
 
 **Training:** trusted optimizer examples → Codex-generated training code in
 CreateOS → frozen candidate outputs → independent host-side financial evaluation

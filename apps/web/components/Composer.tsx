@@ -25,8 +25,8 @@ export function Composer({ draft, notice, busy, onDraft, onChoose, onSubmit }: {
           placeholder="I’m worried about… Tell us what could happen, when, and how much you could lose."
           onChange={event => onDraft(event.target.value)} />
         <div className="composer-bottom">
-          <p id="composer-hint">Run BTC downside with fictional markets for 30 Oct 2026. Other exposures: discovery or illustration only.</p>
-          <button className="btn primary" type="submit" disabled={busy}>Build my demo hedge <span className="arrow" aria-hidden="true">↗</span></button>
+          <p id="composer-hint">{selected ? 'This example uses fictional markets and a fixed observation date.' : 'Your description and date stay yours. Jev interprets the risk and looks for related markets; it does not price a live hedge yet.'}</p>
+          <button className="btn primary" type="submit" disabled={busy}>{selected ? 'Build my demo hedge' : 'Find related markets'} <span className="arrow" aria-hidden="true">↗</span></button>
         </div>
         <p id="input-notice" className="error" role="status">{notice}</p>
       </form>
